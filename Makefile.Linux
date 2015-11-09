@@ -1,0 +1,27 @@
+### Compiler flags
+VERSION=$(shell cat Makefile.version)
+CC = gcc
+CFLAGS = $(RPM_OPT_FLAGS) -static -g -Wall -O2 -D_LIN_ -DVERSION=\"$(VERSION)\"
+DESTDIR=
+LDFLAGS = -lnetlink
+SBINDIR=$(DESTDIR)/usr/sbin
+SCRIPTSDIR=$(DESTDIR)/usr/lib/parallels-tools/tools/scripts
+
+all: prl_nettool
+
+prl_nettool: Linux/detection.o Linux/exec.o Linux/netinfo.o Linux/setnet.o namelist.o common.o netinfo_common.o options.o nettool.o
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+
+clean:
+	rm -rf *.o Linux/*.o prl_nettool
+
+install:
+	mkdir -p $(SBINDIR)
+	install -m 755 prl_nettool $(SBINDIR)
+	mkdir -p $(SCRIPTSDIR)
+	for f in Linux/scripts/*; do \
+		install -m 755 $$f $(SCRIPTSDIR); \
+	done
