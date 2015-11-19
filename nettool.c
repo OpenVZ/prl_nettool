@@ -28,10 +28,7 @@
 /* #define DEBUG_OPT_COMPARE 1 */
 
 #ifdef _WIN_
-#include <Libraries/GuestCrashReporter/reporter.h>
-#include <Libraries/PrlCommonUtils/stringify.h>
-#include <locale.h>
-#include <Windows.h>
+#include <windows.h>
 #else
 #include <dirent.h>
 #include <syslog.h>
@@ -572,7 +569,7 @@ int restart_network()
 
 #define MUTEX_TIMEOUT	240
 #ifdef _WIN_
-#define MUTEX_NAME	L"Global\\prl_nettool_mutex"
+#define MUTEX_NAME	"Global\\prl_nettool_mutex"
 static HANDLE hMutex;
 #else
 #define MUTEX_NAME "/tmp/prl_nettool.lock"
@@ -582,18 +579,18 @@ static int fdlock = -1;
 void single_app_lock(void)
 {
 #ifdef _WIN_
-	hMutex = CreateMutexW(NULL, FALSE, MUTEX_NAME);
+	hMutex = CreateMutexA(NULL, FALSE, MUTEX_NAME);
 	if (hMutex == NULL && GetLastError() == ERROR_ALREADY_EXISTS) {
-		hMutex = OpenMutexW(SYNCHRONIZE, FALSE, MUTEX_NAME);
+		hMutex = OpenMutexA(SYNCHRONIZE, FALSE, MUTEX_NAME);
 	}
 	if (hMutex == NULL) {
-		fprintf(stderr, "WARNING: OpenMutex(\"%ws\") = %u\n", MUTEX_NAME, GetLastError());
+		fprintf(stderr, "WARNING: OpenMutex(\"%s\") = %u\n", MUTEX_NAME, (int)GetLastError());
 	} else {
 		switch (WaitForSingleObject(hMutex, MUTEX_TIMEOUT*1000))
 		{
 		case WAIT_FAILED:
 		case WAIT_ABANDONED:
-			fprintf(stderr, "ERROR: WaitForSingleObject(\"%ws\") = %u\n", MUTEX_NAME, GetLastError());
+			fprintf(stderr, "ERROR: WaitForSingleObject(\"%s\") = %u\n", MUTEX_NAME, (int)GetLastError());
 			exit(2);
 			break;
 		case WAIT_TIMEOUT:
@@ -707,8 +704,6 @@ int main(int argc, char* argv[])
 	debug("%s started", argv[0]);
 
 #ifdef _WIN_
-	setlocale( LC_ALL, "" );
-	enableGuestCrashReporter(STRINGIFY(_TARGET_));
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 

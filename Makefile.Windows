@@ -1,0 +1,18 @@
+### Compiler flags
+VERSION=$(shell cat Makefile.version)
+CC = i686-w64-mingw32-gcc
+CFLAGS = $(RPM_OPT_FLAGS) -Wall -O2 -D_WIN_ -DVERSION=\"$(VERSION)\"
+DESTDIR=
+LDFLAGS = -liphlpapi -ldnsapi -lole32
+TARGET = prl_nettool.exe
+
+all: $(TARGET) 
+
+$(TARGET): netinfo.o setnet.o namelist.o common.o netinfo_common.o options.o nettool.o
+	$(CC) $^ $(LDFLAGS) -o $@
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(INC) $< -o $@
+
+clean:
+	$(RM) *.o $(TARGET)
