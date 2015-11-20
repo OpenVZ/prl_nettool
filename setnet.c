@@ -23,25 +23,23 @@
  * methods for setting network parameters
  */
 
-#include "common.h"
-
 #include <io.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
 
+#include "common.h"
 #include "netinfo.h"
 #include "namelist.h"
 #include "options.h"
 
-#include "Tools/ToolsCenter/Guest/Windows/Common/Settings.h"
-#include "Libraries/Logging/Logging.h"
+#define TOOL_GUEST_UTILS_REGISTRY_PATH "Software\\Virtuozzo\\prl_nettool"
 
-typedef __success(return == 0) LONG    DNS_STATUS;
 
-typedef enum _DNS_NAME_FORMAT
-{
+typedef LONG    DNS_STATUS;
+
+typedef enum _DNS_NAME_FORMAT {
     DnsNameDomain,
     DnsNameDomainLabel,
     DnsNameHostnameFull,
@@ -49,19 +47,13 @@ typedef enum _DNS_NAME_FORMAT
     DnsNameWildcard,
     DnsNameSrvRecord,
     DnsNameValidateTld
-}
-DNS_NAME_FORMAT;
+} DNS_NAME_FORMAT;
 
-DNS_STATUS
-DnsValidateName_A(
-    __in    PCSTR           pszName,
-    __in    DNS_NAME_FORMAT Format
-    );
-
+DNS_STATUS WINAPI DnsValidateName_A(PCSTR pszName, DNS_NAME_FORMAT Format);
 
 static int exec_cmd(char *cmd)
 {
-	int rc = 0;
+	DWORD rc = 0;
 	PROCESS_INFORMATION procinfo = { 0 };
 	STARTUPINFOW startinfo = { 0 };
 	WCHAR cmdline[1024];
@@ -104,83 +96,6 @@ static int exec_netsh(char *text)
 	return exec_cmd(ex_buf);
 }
 
-static int exec_cmd_pipe_stdout(char * text, FILE ** filep)
-{
-	int rc = -1;
-	HANDLE rd = NULL, wr = NULL;
-	SECURITY_ATTRIBUTES attr;
-	PROCESS_INFORMATION procinfo = { 0 };
-	STARTUPINFOW startinfo = { 0 };
-	WCHAR cmdline[MAX_PATH+1];
-	int fd;
-
-	debug("run: %s\n", text);
-
-	attr.nLength = sizeof(attr);
-	attr.bInheritHandle = TRUE;
-	attr.lpSecurityDescriptor = NULL;
-	if (!CreatePipe(&rd, &wr, &attr, 0)) {
-		WRITE_TRACE(DBG_FATAL, "CreatePipe() failed, err = %u", GetLastError());
-		goto out;
-	}
-	SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
-
-	startinfo.cb = sizeof(startinfo);
-	startinfo.hStdInput = NULL;
-	startinfo.hStdOutput = wr;
-	startinfo.hStdError = NULL;
-	startinfo.dwFlags = STARTF_USESTDHANDLES;
-
-	_snwprintf(cmdline, MAX_PATH, L"%hs", text);
-	cmdline[MAX_PATH] = 0;
-
-	if (!CreateProcessW(NULL,
-			    cmdline,		// command line
-			    NULL,		// process security attributes
-			    NULL,		// primary thread security attributes
-			    TRUE,		// handles are inherited
-			    CREATE_NO_WINDOW,	// creation flags
-			    NULL,		// use parent's environment
-			    NULL,		// use parent's current directory
-			    &startinfo,		// STARTUPINFO pointer
-			    &procinfo))		// receives PROCESS_INFORMATION
-	{
-		WRITE_TRACE(DBG_FATAL, "CreateProcess(\"%hs\") failed, err = %u", text, GetLastError());
-		goto out;
-	}
-
-	CloseHandle(wr);
-	wr = NULL;
-
-	fd = _open_osfhandle((intptr_t)rd, _O_RDONLY);
-	if (fd < 0) {
-		WRITE_TRACE(DBG_FATAL, "_open_osfhandle() failed, errno = %u\n", errno);
-		goto out;
-	}
-	// from now fclose() will do CloseHandle() as well
-	rd = NULL;
-	*filep = _fdopen(fd, "r");
-	if (*filep == NULL) {
-		WRITE_TRACE(DBG_FATAL, "_open_osfhandle() failed, errno = %u\n", errno);
-		_close(fd);
-		goto out;
-	}
-
-	rc = 0;
-
-out:
-	if (procinfo.hProcess)
-		CloseHandle(procinfo.hProcess);
-	if (procinfo.hThread)
-		CloseHandle(procinfo.hThread);
-	if (rd)
-		CloseHandle(rd);
-	if (wr)
-		CloseHandle(wr);
-
-	return rc;
-}
-
 int remove_ipv6_ips(struct netinfo *if_it)
 {
 	char str[1024];
@@ -213,8 +128,6 @@ int remove_ipv6_ips(struct netinfo *if_it)
 // return 1st not link-local addr of iface
 static int find_if_first_ip(struct netinfo *if_it, char * ip)
 {
-	char str[1024];
-	int rc;
 	struct namelist *ip_mask;
 	char mask[IP_LENGTH+1];
 
@@ -405,7 +318,6 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 {
 	char str[1024];
-	int rc;
 	struct namelist *gws = NULL;
 	struct namelist *gw;
 
@@ -430,7 +342,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 #else
 			sprintf(str, "interface ip del route 0.0.0.0/0 \"%s\"", if_it->name);
 #endif
-		rc = exec_netsh(str);
+		exec_netsh(str);
 
 		if (strlen(gw->name) > 0 &&
 			strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE)) &&
@@ -441,7 +353,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 			else
 				sprintf(str, "interface ip add address \"%s\" gateway=%s gwmetric=1",
 							if_it->name, gw->name);
-			rc = exec_netsh(str);
+			exec_netsh(str);
 		}
 
 		gw = gw->next;
@@ -457,7 +369,6 @@ int set_search_domain(struct netinfo *netinfo_header, struct nettool_mac *params
 
 	DWORD rc;
 	HKEY hKey;
-	struct netinfo *info = NULL;
 	ULONG len;
 	struct namelist *names = NULL;
 	struct namelist *name;
@@ -498,28 +409,6 @@ int set_search_domain(struct netinfo *netinfo_header, struct nettool_mac *params
 
 	rc = RegCloseKey(hKey);
 
-	return 0;
-}
-
-static int del_reg_value(const char *key, const char *name)
-{
-	HKEY hKey;
-	DWORD rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, key, 0, KEY_SET_VALUE, &hKey);
-	if (rc != ERROR_SUCCESS) {
-		error(rc, "Can't open registry %s\n", key);
-		return 1;
-	}
-	rc = RegDeleteValueA(hKey, name);
-	if (rc != ERROR_SUCCESS) {
-		error(rc, "Can't change registry %s\\%s. return %d\n", key, name, rc);
-		RegCloseKey(hKey);
-		return 1;
-	}
-	rc = RegFlushKey(hKey);
-	if (rc != ERROR_SUCCESS) {
-		error(rc, "Can't flush registry %s. return %d\n", key, rc);
-	}
-	RegCloseKey(hKey);
 	return 0;
 }
 
@@ -654,7 +543,6 @@ int set_hostname(struct nettool_mac *params)
 	DWORD netbios_name_len = (DWORD)sizeof(netbios_name);
 	char *computer_name = NULL;
 	char *domain = NULL;
-	char *p;
 	const char *reg_hostname[] = {S_HOSTNAME_NV_REG_NAME,
 		S_HOSTNAME_REG_NAME, NULL};
 	const char *reg_domain[] = {S_DOMAIN_NV_REG_NAME,
@@ -671,7 +559,7 @@ int set_hostname(struct nettool_mac *params)
 	hostname[0] = '\0';
 	if (strlen(params->value) > 0) {
 		strncpy(hostname, params->value, sizeof(hostname));
-		hostname[sizeof(hostname)] = '\0';
+		hostname[sizeof(hostname)-1] = '\0';
 	}
 
 	if (strchr(hostname, '.') != NULL)
@@ -811,7 +699,7 @@ static int remove_route_xp(void)
 			    0, KEY_ENUMERATE_SUB_KEYS, &key);
 	if (res != ERROR_SUCCESS) {
 		if (res != ERROR_PATH_NOT_FOUND) {
-			WRITE_TRACE(DBG_WARNING, "RegOpenKeyEx() err %u", res);
+			error(0, "RegOpenKeyEx() err %u", res);
 			return res;
 		}
 		return 0;
@@ -824,7 +712,7 @@ static int remove_route_xp(void)
 		if (res == ERROR_NO_MORE_ITEMS)
 			break;
 		if (res != ERROR_SUCCESS) {
-			WRITE_TRACE(DBG_WARNING, "RegEnumKeyEx() err %u", res);
+			error(0, "RegEnumKeyEx() err %u", res);
 			continue;
 		}
 
@@ -837,7 +725,7 @@ static int remove_route_xp(void)
 			s = strtok(NULL, ",");
 		}
 		if (j != _countof(param)) {
-			WRITE_TRACE(DBG_WARNING, "Bad PersistentRoutes entry %ws", buf);
+			error(0, "Bad PersistentRoutes entry %ws", buf);
 			continue;
 		}
 
@@ -852,6 +740,83 @@ static int remove_route_xp(void)
 }
 
 #else
+
+static int exec_cmd_pipe_stdout(char * text, FILE ** filep)
+{
+	int rc = -1;
+	HANDLE rd = NULL, wr = NULL;
+	SECURITY_ATTRIBUTES attr;
+	PROCESS_INFORMATION procinfo = { 0 };
+	STARTUPINFOW startinfo = { 0 };
+	WCHAR cmdline[MAX_PATH+1];
+	int fd;
+
+	debug("run: %s\n", text);
+
+	attr.nLength = sizeof(attr);
+	attr.bInheritHandle = TRUE;
+	attr.lpSecurityDescriptor = NULL;
+	if (!CreatePipe(&rd, &wr, &attr, 0)) {
+		error(0, "CreatePipe() failed, err = %u", GetLastError());
+		goto out;
+	}
+	SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+
+	startinfo.cb = sizeof(startinfo);
+	startinfo.hStdInput = NULL;
+	startinfo.hStdOutput = wr;
+	startinfo.hStdError = NULL;
+	startinfo.dwFlags = STARTF_USESTDHANDLES;
+
+	_snwprintf(cmdline, MAX_PATH, L"%hs", text);
+	cmdline[MAX_PATH] = 0;
+
+	if (!CreateProcessW(NULL,
+			    cmdline,		// command line
+			    NULL,		// process security attributes
+			    NULL,		// primary thread security attributes
+			    TRUE,		// handles are inherited
+			    CREATE_NO_WINDOW,	// creation flags
+			    NULL,		// use parent's environment
+			    NULL,		// use parent's current directory
+			    &startinfo,		// STARTUPINFO pointer
+			    &procinfo))		// receives PROCESS_INFORMATION
+	{
+		error(0, "CreateProcess(\"%hs\") failed, err = %u", text, GetLastError());
+		goto out;
+	}
+
+	CloseHandle(wr);
+	wr = NULL;
+
+	fd = _open_osfhandle((intptr_t)rd, _O_RDONLY);
+	if (fd < 0) {
+		error(0, "_open_osfhandle() failed, errno = %u\n", errno);
+		goto out;
+	}
+	// from now fclose() will do CloseHandle() as well
+	rd = NULL;
+	*filep = _fdopen(fd, "r");
+	if (*filep == NULL) {
+		error(0, "_open_osfhandle() failed, errno = %u\n", errno);
+		_close(fd);
+		goto out;
+	}
+
+	rc = 0;
+
+out:
+	if (procinfo.hProcess)
+		CloseHandle(procinfo.hProcess);
+	if (procinfo.hThread)
+		CloseHandle(procinfo.hThread);
+	if (rd)
+		CloseHandle(rd);
+	if (wr)
+		CloseHandle(wr);
+
+	return rc;
+}
 
 static int remove_route_vista(struct netinfo *if_it, const char *family)
 {
@@ -914,21 +879,19 @@ static int remove_route_vista(struct netinfo *if_it, const char *family)
 int set_route(struct netinfo *if_it, struct nettool_mac *params)
 {
 	char str[1024];
-	char if_ip[100];
-	char ip[100];
-	char mask[IP_LENGTH+1];
-	int rc;
 	struct namelist *gws = NULL;
 	struct namelist *gw;
-
-	//split params->value
-	namelist_split(&gws, params->value);
+	int rc;
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
+	char if_ip[100];
 	rc = find_if_first_ip(if_it, if_ip);
 	if (rc < 0)
 		return rc;
 #endif
+
+	//split params->value
+	namelist_split(&gws, params->value);
 
 	//for each ip do
 	gw = gws;
@@ -949,6 +912,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 				rc = exec_netsh(str);
 			} else {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
+				char ip[100];
+				char mask[IP_LENGTH+1];
 				if (split_ip_mask(gw->name, ip, mask) < 0) {
 					strcpy(ip, gw->name);
 					strcpy(mask, "255.255.255.255");
@@ -966,7 +931,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 		gw = gw->next;
 	}
 
-	return 0;
+	rc = 0;
+	return rc;
 }
 
 int clean(struct netinfo *if_it)
@@ -1042,7 +1008,7 @@ int enable_disabled_adapter(const char *mac)
 	int found = 0;
 	DWORD dwSize = 0;
 	DWORD dwRetVal = 0;
-	unsigned int i, j;
+	unsigned int i;
 
 	// variables used for GetIfTable and GetIfEntry
 	MIB_IFTABLE *pIfTable;

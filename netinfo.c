@@ -23,17 +23,16 @@
  * methods for getting network parameters
  */
 
-#include "common.h"
-
 #include <winsock2.h>
-#include <Ws2tcpip.h>
+#include <ws2tcpip.h>
 #include <mstcpip.h>
 #include <iphlpapi.h>
 #include <stdlib.h>
 #include <initguid.h>
 #include <devguid.h>
-#include <Objbase.h>
+#include <objbase.h>
 
+#include "common.h"
 #include "netinfo.h"
 #include "namelist.h"
 
@@ -140,7 +139,7 @@ int getNetInterfaceName( const char *pAdapterGuid, char* adapterName, int size)
 	char cGuid[STR_SIZE+1];
 	HKEY hKey;
 	DWORD dwType;
-	int rSize = size;
+	DWORD rSize = size;
 	size_t converted = 0;
 
 	if (!StringFromGUID2( &GUID_DEVCLASS_NET, wcGuid, sizeof(wcGuid) ))
@@ -237,7 +236,7 @@ int read_ifconf(struct netinfo **netinfo_head)
 
 		strcpy(if_it->mac, buf);
 
-		if (rc = getNetInterfaceName(pAdapter->AdapterName, if_it->name, sizeof(if_it->name))) {
+		if ((rc = getNetInterfaceName(pAdapter->AdapterName, if_it->name, sizeof(if_it->name)))) {
 			netinfo_free(if_it);
 			return rc;
 		}
@@ -299,7 +298,7 @@ int socket_address_to_str(SOCKET_ADDRESS *saddr, char *buf, size_t size)
 		return -1;
 	}
 
-	if (inet_ntop(addr->sa_family, INETADDR_ADDRESS(addr), buf, size) == NULL)
+	if (inet_ntop(addr->sa_family, addr, buf, size) == NULL)
 	{
 		error(0, "Failed to convert ipv socket_address to string");
 		return -1;

@@ -32,7 +32,6 @@
 #include <stdio.h>
 
 #ifdef _WIN_
-#pragma warning(disable:4996)	/* obsolete snprintf? Thank you M$ but I have to pass. */
 
 #include <windows.h>
 
@@ -98,14 +97,15 @@ void error(int err, const char *fmt, ...)
 
 int is_ipv6_supported()
 {
-    DWORD dwVersion = 0;
-    DWORD dwMajorVersion = 0;
-    DWORD dwMinorVersion = 0;
+	DWORD dwVersion = 0;
+	DWORD dwMajorVersion = 0;
+	DWORD dwMinorVersion = 0;
 
-    dwVersion = GetVersion();
+	dwVersion = GetVersion();
 
-    dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
-    dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+	dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
+	dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
+	(void)dwMinorVersion;
 
 	if (dwMajorVersion >= 6)
 		return 1;
