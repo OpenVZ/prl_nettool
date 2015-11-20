@@ -879,21 +879,19 @@ static int remove_route_vista(struct netinfo *if_it, const char *family)
 int set_route(struct netinfo *if_it, struct nettool_mac *params)
 {
 	char str[1024];
-	char if_ip[100];
-	char ip[100];
-	char mask[IP_LENGTH+1];
-	int rc;
 	struct namelist *gws = NULL;
 	struct namelist *gw;
-
-	//split params->value
-	namelist_split(&gws, params->value);
+	int rc;
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
+	char if_ip[100];
 	rc = find_if_first_ip(if_it, if_ip);
 	if (rc < 0)
 		return rc;
 #endif
+
+	//split params->value
+	namelist_split(&gws, params->value);
 
 	//for each ip do
 	gw = gws;
@@ -914,6 +912,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 				rc = exec_netsh(str);
 			} else {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
+				char ip[100];
+				char mask[IP_LENGTH+1];
 				if (split_ip_mask(gw->name, ip, mask) < 0) {
 					strcpy(ip, gw->name);
 					strcpy(mask, "255.255.255.255");
@@ -931,7 +931,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 		gw = gw->next;
 	}
 
-	return 0;
+	rc = 0;
+	return rc;
 }
 
 int clean(struct netinfo *if_it)

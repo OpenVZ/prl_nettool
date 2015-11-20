@@ -298,7 +298,7 @@ int socket_address_to_str(SOCKET_ADDRESS *saddr, char *buf, size_t size)
 		return -1;
 	}
 
-	if (inet_ntop(addr->sa_family, INETADDR_ADDRESS(addr), buf, size) == NULL)
+	if (inet_ntop(addr->sa_family, addr, buf, size) == NULL)
 	{
 		error(0, "Failed to convert ipv socket_address to string");
 		return -1;

@@ -1,12 +1,27 @@
 ### Compiler flags
 VERSION=$(shell cat Makefile.version)
-CC = i686-w64-mingw32-gcc
-CFLAGS = $(RPM_OPT_FLAGS) -Wall -O2 -D_WIN_ -DVERSION=\"$(VERSION)\"
+CC32 = i686-w64-mingw32-gcc
+CC64 = x86_64-w64-mingw32-gcc
+NTFLAGS = -DNTDDI_VERSION=0x06000000 -D_WIN32_WINNT=0x0600 
+CFLAGS = $(RPM_OPT_FLAGS) -Wall -Wno-unused -Wno-unused-function -O2 -D_WIN_ $(NTFLAGS) -DVERSION=\"$(VERSION)\"
 DESTDIR=
-LDFLAGS = -liphlpapi -ldnsapi -lole32
+LDFLAGS = -liphlpapi -ldnsapi -lole32 -lws2_32
 TARGET = prl_nettool.exe
 
-all: $(TARGET) 
+NETTOOL_VERSION = "$(VERSION)"
+NETTOOL_MANUFACTURER = "Virtuozzo"
+
+all: prl_nettool_i686.msi prl_nettool_x86_64.msi
+
+prl_nettool_i686.msi:
+	$(MAKE) CC=$(CC32) clean $(TARGET)
+	NETTOOL_VERSION=$(NETTOOL_VERSION) NETTOOL_MANUFACTURER=$(NETTOOL_MANUFACTURER) \
+	wixl -o $@ -D Arch=32 prl_nettool.wxs
+
+prl_nettool_x86_64.msi:
+	$(MAKE) CC=$(CC64) clean $(TARGET)
+	NETTOOL_VERSION=$(NETTOOL_VERSION) NETTOOL_MANUFACTURER=$(NETTOOL_MANUFACTURER) \
+	wixl -o $@ -a x64 -D Arch=64 prl_nettool.wxs
 
 $(TARGET): netinfo.o setnet.o namelist.o common.o netinfo_common.o options.o nettool.o
 	$(CC) $^ $(LDFLAGS) -o $@
@@ -16,3 +31,6 @@ $(TARGET): netinfo.o setnet.o namelist.o common.o netinfo_common.o options.o net
 
 clean:
 	$(RM) *.o $(TARGET)
+
+distclean:
+	$(RM) *.o $(TARGET) prl_nettool_i686.msi prl_nettool_x86_64.msi
