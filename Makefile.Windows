@@ -14,12 +14,12 @@ NETTOOL_MANUFACTURER = "Virtuozzo"
 all: prl_nettool_i686.msi prl_nettool_x86_64.msi
 
 prl_nettool_i686.msi:
-	$(MAKE) CC=$(CC32) clean $(TARGET)
+	$(MAKE) CC=$(CC32) clean $(TARGET) -f Makefile.Windows
 	NETTOOL_VERSION=$(NETTOOL_VERSION) NETTOOL_MANUFACTURER=$(NETTOOL_MANUFACTURER) \
 	wixl -o $@ -D Arch=32 prl_nettool.wxs
 
 prl_nettool_x86_64.msi:
-	$(MAKE) CC=$(CC64) clean $(TARGET)
+	$(MAKE) CC=$(CC64) clean $(TARGET) -f Makefile.Windows
 	NETTOOL_VERSION=$(NETTOOL_VERSION) NETTOOL_MANUFACTURER=$(NETTOOL_MANUFACTURER) \
 	wixl -o $@ -a x64 -D Arch=64 prl_nettool.wxs
 
