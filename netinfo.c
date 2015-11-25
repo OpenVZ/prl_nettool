@@ -23,6 +23,7 @@
  * methods for getting network parameters
  */
 
+#include <sdkddkver.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <mstcpip.h>
@@ -35,6 +36,18 @@
 #include "common.h"
 #include "netinfo.h"
 #include "namelist.h"
+
+/* mingw version of mstcpip.h lacks this function */
+#if defined(__MINGW32__) || defined(__MINGW64__)
+static inline PUCHAR INETADDR_ADDRESS(const SOCKADDR* a)
+{
+	if (a->sa_family == AF_INET6) {
+		return (PUCHAR)&((PSOCKADDR_IN6)a)->sin6_addr;
+	} else {
+		return (PUCHAR)&((PSOCKADDR_IN)a)->sin_addr;
+	}
+}
+#endif
 
 
 int read_dns(DWORD ad_index, struct netinfo *netinfo)
@@ -298,7 +311,7 @@ int socket_address_to_str(SOCKET_ADDRESS *saddr, char *buf, size_t size)
 		return -1;
 	}
 
-	if (inet_ntop(addr->sa_family, addr, buf, size) == NULL)
+	if (inet_ntop(addr->sa_family, INETADDR_ADDRESS(addr), buf, size) == NULL)
 	{
 		error(0, "Failed to convert ipv socket_address to string");
 		return -1;

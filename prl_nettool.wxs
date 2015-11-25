@@ -63,6 +63,7 @@
         <Directory Id="qemu_ga_directory" Name="Qemu-ga">
           <Component Id="prl_nettool" Guid="{A53D4110-6C6F-408D-9DBB-802D86B72527}">
             <File Id="prl_nettool.exe" Name="prl_nettool.exe" Source="prl_nettool.exe" KeyPath="yes" DiskId="1"/>
+            <File Id="prl_nettool_vista.exe" Name="prl_nettool_vista.exe" Source="prl_nettool_vista.exe" DiskId="1"/>
           </Component>
           <Component Id="registry_entries" Guid="{43F4BF79-3C6E-4591-B96D-0C9629F7B615}">
             <RegistryKey Root="HKLM"

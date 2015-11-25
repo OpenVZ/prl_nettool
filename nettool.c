@@ -23,11 +23,10 @@
  * main() and prints output
  */
 
-#include "common.h"
-
 /* #define DEBUG_OPT_COMPARE 1 */
 
 #ifdef _WIN_
+#include <sdkddkver.h>
 #include <windows.h>
 #else
 #include <dirent.h>
@@ -37,6 +36,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+
+#include "common.h"
 #include "options.h"
 #include "netinfo.h"
 #include "setnet.h"
