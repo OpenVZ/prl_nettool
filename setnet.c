@@ -23,11 +23,12 @@
  * methods for setting network parameters
  */
 
+#include <sdkddkver.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
 #include <io.h>
 #include <fcntl.h>
 #include <ctype.h>
-#include <winsock2.h>
-#include <iphlpapi.h>
 
 #include "common.h"
 #include "netinfo.h"
