@@ -83,7 +83,8 @@ function move_configs()
 
 function set_dhcp()
 {
-	backup_configs
+	local delall=`[ "${PROTO4}" == "dhcp" ] && echo -n "yes"`
+	backup_configs $delall
 	create_config
 	move_configs
 
