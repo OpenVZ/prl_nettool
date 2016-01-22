@@ -299,6 +299,7 @@ function remove_debian_interface()
 	awk '
 		NF == 0 {next}
 		$1 == "auto" && $2 ~/'${dev}'$/ {next}
+		$1 == "allow-hotplug" && $2 ~/'${dev}'$/ {next}
 		$1 == "iface" && $2 ~/'${dev}'$/ {skip = 1; next}
 		/^\t/ && skip {next}
 		{skip = 0; print}
