@@ -97,6 +97,7 @@ else
 	remove_debian_interface "${ETH_DEV}:[0-9]+" ${CONFIGFILE}
 	remove_debian_interface ${ETH_DEV} ${CONFIGFILE}
 
+	echo "allow-hotplug ${ETH_DEV}" >> $CONFIGFILE
 	echo "auto ${ETH_DEV}" >> $CONFIGFILE
 
 	if [ "x$PROTO4" == "xyes" ] ; then
