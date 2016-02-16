@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2015 Parallels IP Holdings GmbH
+# Copyright (C) Parallels, 1999-2011. All rights reserved.
 #
 # This script configure routes inside RedHat like VM.
 #
@@ -25,34 +25,30 @@ ETH_DEV=$1
 ETH_GATEWAY=$2
 ETH_MAC=$3
 
-ETH_DEV_CFG=route-$ETH_DEV
-
-IFCFG_DIR=/etc/sysconfig/network-scripts
-IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
+uuid=`nm_check_and_create $ETH_DEV $ETH_MAC` ||
+	exit $?
 
 function set_routes()
 {
-	local is_changed="no"
+	call_nmcli c modify $uuid ipv4.routes ""
+	call_nmcli c modify $uuid ipv6.routes ""
 
-	if [ -f ${IFCFG} ] ; then
-		/bin/mv -f ${IFCFG} ${IFCFG}.bak 
-		is_changed="yes"
-	fi
+	local errors=0
 
 	if [ "${ETH_GATEWAY}" != "remove" ] ; then
 		for gw in ${ETH_GATEWAY}; do
-			echo "${gw} dev ${ETH_DEV} scope link" >> $IFCFG
-			is_changed="yes"
+			if is_ipv6 ${gw}; then
+				call_nmcli c modify $uuid +ipv6.routes ${gw}
+			else
+				call_nmcli c modify $uuid +ipv4.routes ${gw}
+			fi
+
+			[ $? -ne 0 ] && errors=$((errors + 1))
 		done
 	fi
-	
-	if [ "$is_changed" == "yes" ] ; then
-		is_device_up ${ETH_DEV} && /sbin/ifdown ${ETH_DEV}
-		/sbin/ifup ${ETH_DEV}
-	fi
+
+	return $errors
 }
 
 set_routes
-
-call_nm_script $0 "$@"
 # end of script

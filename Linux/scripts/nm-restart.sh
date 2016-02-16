@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2015 Parallels IP Holdings GmbH
+# Copyright (C) Parallels, 1999-2009. All rights reserved.
 #
 # This script restart network inside RedHat like VM.
 #
@@ -13,8 +13,10 @@ if [ -f "$funcs" ] ; then
 else
 	echo "Program $0"
 	echo "'$funcs' was not found"
-	exit 2
+	exit 1
 fi
-
-call_nm_script $0 "$@" || /etc/init.d/network restart
+  
+service_command NetworkManager stop &&
+service_command network restart &&
+service_command NetworkManager start
 # end of script
