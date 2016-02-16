@@ -66,19 +66,21 @@ function backup_configs()
 	mkdir -p ${IFCFG_DIR}/bak
 	[ -n "${delall}" ] && return 0
 
-	cd ${IFCFG_DIR} || return 1
+	pushd ${IFCFG_DIR} > /dev/null 2>&1 || return 1
 	if ls ${ETH_DEV_CFG}:* > /dev/null 2>&1; then
 		${CP} ${ETH_DEV_CFG}:* ${IFCFG_DIR}/bak/ || \
 			error "Unable to backup intrface config files" ${VZ_FS_NO_DISK_SPACE}
 	fi
+	popd > /dev/null 2>&1
 }
 
 function move_configs()
 {
-	cd ${IFCFG_DIR} || return 1
+	pushd ${IFCFG_DIR} > /dev/null 2>&1 || return 1
 	rm -rf ${ETH_DEV_CFG}:*
 	mv -f bak/* ${IFCFG_DIR}/ >/dev/null 2>&1 
 	rm -rf ${IFCFG_DIR}/bak
+	popd > /dev/null 2>&1
 }
 
 function set_dhcp()
@@ -94,5 +96,5 @@ function set_dhcp()
 
 set_dhcp
 
-exit 0
+call_nm_script $0 "$@"
 # end of script

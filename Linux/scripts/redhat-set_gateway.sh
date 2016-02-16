@@ -6,6 +6,7 @@
 # Parameters: <dev> <IP>
 #   <dev>         - name of device. (example: eth2)
 #   <IP>          - IP address of gateway
+#   <mac>         - hardware address of device
 #  
 
 prog="$0"
@@ -23,6 +24,7 @@ fi
 
 ETH_DEV=$1
 ETH_GATEWAY=$2
+ETH_MAC=$3
 ETH_DEV_CFG=ifcfg-$ETH_DEV
 
 IFCFG_DIR=/etc/sysconfig/network-scripts
@@ -61,5 +63,5 @@ function set_gateway()
 
 set_gateway
 
-exit 0
+call_nm_script $0 "$@"
 # end of script

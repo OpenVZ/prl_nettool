@@ -14,9 +14,30 @@
 #   1 - disabled 
 #
 
+prog="$0"
+path="${prog%/*}"
+funcs="$path/functions"
+
+if [ -f "$funcs" ] ; then
+	. $funcs
+else
+	echo "Program $0"
+	echo "'$funcs' was not found"
+	exit 2
+fi
+
 ADDR=$1
 DEV=$2
 PROTO=$3
+
+
+nmscript=$path/nm-get_dhcp.sh
+
+is_nm_active
+if [ $? -eq 0 -a -f $nmscript ]; then
+	$nmscript "$@"
+	exit $?
+fi
 
 __sed_discard_ignored_files='/\(~\|\.bak\|\.orig\|\.rpmnew\|\.rpmorig\|\.rpmsave\|\:[0-9]*\)$/d'
 
@@ -52,5 +73,4 @@ if [ $? -eq 0 ] ; then
 fi
 
 exit 1
-
 

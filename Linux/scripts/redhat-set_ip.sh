@@ -152,10 +152,11 @@ function add_ip6()
 
 function move_configs()
 {
-	cd ${IFCFG_DIR} || return 1
+	pushd ${IFCFG_DIR} > /dev/null 2>&1 || return 1
 	rm -rf ${ETH_DEV_CFG}*
 	mv -f bak/* ${IFCFG_DIR}/ >/dev/null 2>&1 
 	rm -rf ${IFCFG_DIR}/bak
+	popd > /dev/null 2>&1
 }
 
 function set_ip()
@@ -224,5 +225,5 @@ function set_ip()
 
 set_ip
 
-exit 0
+call_nm_script $0 "$@"
 # end of script

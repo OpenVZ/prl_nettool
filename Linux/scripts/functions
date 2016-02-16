@@ -23,6 +23,8 @@ NWSYSTEMCONNECTIONS="$NWSYSTEMDIR/system-connections"
 NWMANAGER="/etc/init.d/NetworkManager"
 [ -f "${NWMANAGER}" ] || NWMANAGER="/etc/init.d/network-manager"
 SYSTEMCTL="/bin/systemctl"
+INITDIR="/etc/init.d"
+NETTOOL_LOG="/var/log/vz-nettool.log"
 
 #options used in *-set_ip.sh
 USE_DHCPV4=0
@@ -488,6 +490,18 @@ need_to_disable_network_manager() (
 	return 1
 )
 
+service_command()
+{
+	local service=$1
+	local cmd=$2
+
+	if [ -x $SYSTEMCTL ]; then
+		$SYSTEMCTL $cmd $service > /dev/null 2>&1
+	else
+		$INITDIR/$service $cmd > /dev/null 2>&1
+	fi
+}
+
 disable_network_manager()
 {
 	need_to_disable_network_manager
@@ -495,10 +509,10 @@ disable_network_manager()
 
 	local nm_sysv="/etc/init.d/NetworkManager"
 
-	if [ -x $nm_sysv ]; then
-		disable_network_manager_sysv
-	elif [ -x $SYSTEMCTL ]; then
+	if [ -x $SYSTEMCTL ]; then
 		disable_network_manager_systemd
+	else
+		disable_network_manager_sysv
 	fi
 }
 
@@ -603,3 +617,65 @@ is_nm_present()
 
 	return 0
 }
+
+is_nm_active()
+{
+	if [ -x $SYSTEMCTL ]; then
+		service_command "NetworkManager" "is-active"
+	else
+		service_command "NetworkManager" "status"
+	fi
+}
+
+nm_get_if_field()
+{
+	local field=$2
+	local name="prl_nettool-nm-$1"
+
+	out=`nmcli --field $field c show $name 2>/dev/null`
+	[ $? -ne 0 ] && return 1
+
+	echo $out | sed s/$field:// | sed s/[[:space:]]//g
+}
+
+nm_check_and_create()
+{
+	local dev=$1
+	local mac=$2
+	local name="prl_nettool-nm-$dev"
+
+	call_nmcli c show $name
+	if [ $? -ne 0 ]; then
+		call_nmcli c add type ethernet ifname $dev con-name $name mac $mac ||
+			return $?
+	fi
+
+	nm_get_if_field $dev connection.uuid
+}
+
+call_nm_script()
+{
+	local from=$1
+	local nmscript=`echo $from | sed 's@\(.*/\)\(redhat\|debian\|suse\)@\1nm@'`
+
+	is_nm_active
+	if [ $? -eq 0 -a -f $nmscript ]; then
+		$nmscript "${@:2}"
+		return $?
+	fi
+
+	return 0
+}
+
+call_nmcli()
+{
+	out=`LC_ALL=C nmcli $@ 2>&1`
+	res=$?
+
+	[ $res -ne 0 ] && echo "[`date`]: ERROR at 'nmcli $*'
+	called from ${BASH_SOURCE[1]}:${BASH_LINENO[1]} ${FUNCNAME[1]}():
+	$out" >> $NETTOOL_LOG
+
+	return $res
+}
+
