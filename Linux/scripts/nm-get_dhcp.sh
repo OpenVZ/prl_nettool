@@ -33,7 +33,7 @@ PROTO=$3
 uuid=`nm_check_and_create $DEV $ADDR` ||
 	exit 2
 
-[ "x$PROTO" == "x" ] $$ PROTO=4
+[ "x$PROTO" == "x" ] && PROTO=4
 
 dhcp=`nm_get_if_field $DEV ipv$PROTO.method`
 [ $? -ne 0 ] && exit 2
