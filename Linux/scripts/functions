@@ -669,7 +669,7 @@ call_nm_script()
 
 call_nmcli()
 {
-	out=`LC_ALL=C nmcli $@ 2>&1`
+	out=`LC_ALL=C nmcli "$@" 2>&1`
 	res=$?
 
 	[ $res -ne 0 ] && echo "[`date`]: ERROR at 'nmcli $*'
