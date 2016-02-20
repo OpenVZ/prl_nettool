@@ -105,8 +105,12 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params){
 	if (params->value == NULL)
 		return 0;
 
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"%s\" \"\"",
-			params->value) >= PATH_MAX)
+	/* We had better use dhclient-$IF.conf here,
+	 * but it brings a lot of problems when e.g. iface is bridged
+	 * so just leave the old (global, not per-interface) behaviour.
+	 * */
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"%s\" \"\" \"\" \"%s\"",
+			params->value, (os_script_prefix != NULL) ?  os_script_prefix : "") >= PATH_MAX)
 	{
 		werror("ERROR: Command line for execution set_dns.sh is too long");
 		return -1;
