@@ -20,6 +20,7 @@ NWSYSTEMDIR="/etc/NetworkManager"
 NWSYSTEMCONF="$NWSYSTEMDIR/nm-system-settings.conf"
 NMCONFFILE="$NWSYSTEMDIR/NetworkManager.conf"
 NWSYSTEMCONNECTIONS="$NWSYSTEMDIR/system-connections"
+NWCONFDIR="$NWSYSTEMDIR/conf.d"
 NWMANAGER="/etc/init.d/NetworkManager"
 [ -f "${NWMANAGER}" ] || NWMANAGER="/etc/init.d/network-manager"
 SYSTEMCTL="/bin/systemctl"
@@ -638,6 +639,15 @@ nm_get_if_field()
 	echo $out | sed s/$field:// | sed s/[[:space:]]//g
 }
 
+create_nm_if_config()
+{
+	cat > "$NWCONFDIR/60-prl_nettool_$1.conf" <<-EOF
+[main]
+no-auto-default+=$2
+plugins-=ifcfg-rh
+EOF
+}
+
 nm_check_and_create()
 {
 	local dev=$1
@@ -651,6 +661,9 @@ nm_check_and_create()
 	fi
 
 	nm_get_if_field $dev connection.uuid
+
+	create_nm_if_config $dev $mac ||
+		return $?
 }
 
 call_nm_script()
