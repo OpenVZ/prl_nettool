@@ -654,16 +654,27 @@ nm_check_and_create()
 	local mac=$2
 	local name="prl_nettool-nm-$dev"
 
+	create_nm_if_config $dev $mac || return $?
+
 	call_nmcli c show $name
-	if [ $? -ne 0 ]; then
+		is_old=$?
+
+	if [ $is_old -ne 0 ]; then
 		call_nmcli c add type ethernet ifname $dev con-name $name mac $mac ||
 			return $?
 	fi
 
-	nm_get_if_field $dev connection.uuid
+	uuid=`nm_get_if_field $dev connection.uuid` || return $?
 
-	create_nm_if_config $dev $mac ||
-		return $?
+	# Set mac to dhcp-client-id for same dhcp identefication on interface different configs
+	if [ $is_old -ne 0 ]; then
+		call_nmcli c modify $uuid ipv4.dhcp-client-id "$mac" ||
+			return $?
+	fi
+
+	call_nmcli c up $uuid ifname $dev || return $?
+
+	echo $uuid
 }
 
 call_nm_script()
