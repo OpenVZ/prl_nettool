@@ -61,7 +61,12 @@ function set_gateway()
 	/sbin/ifup ${ETH_DEV}
 }
 
+is_nm_active
+if [ $? -eq 0 ]; then
+	call_nm_script $0 "$@"
+	exit $?
+fi
+
 set_gateway
 
-call_nm_script $0 "$@"
 # end of script

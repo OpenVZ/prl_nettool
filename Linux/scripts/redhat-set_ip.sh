@@ -223,7 +223,12 @@ function set_ip()
 	fi
 }
 
+is_nm_active
+if [ $? -eq 0 ]; then
+	call_nm_script $0 "$@"
+	exit $?
+fi
+
 set_ip
 
-call_nm_script $0 "$@"
 # end of script

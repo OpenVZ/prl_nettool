@@ -94,7 +94,12 @@ function set_dhcp()
 	/sbin/ifup ${ETH_DEV}
 }
 
+is_nm_active
+if [ $? -eq 0 ]; then
+	call_nm_script $0 "$@"
+	exit $?
+fi
+
 set_dhcp
 
-call_nm_script $0 "$@"
 # end of script
