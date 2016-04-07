@@ -641,11 +641,18 @@ nm_get_if_field()
 
 create_nm_if_config()
 {
-	cat > "$NWCONFDIR/60-prl_nettool_$1.conf" <<-EOF
+	local path="$NWCONFDIR/60-prl_nettool_$1.conf"
+
+	if [ -f "$path" ]; then
+		return 0
+	fi
+
+	cat > "$path" <<-EOF
 [main]
 no-auto-default+=$2
 plugins-=ifcfg-rh
 EOF
+	service_command NetworkManager restart
 }
 
 nm_check_and_create()
