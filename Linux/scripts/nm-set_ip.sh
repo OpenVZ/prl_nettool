@@ -154,6 +154,8 @@ function set_ip()
 			return $?
 	fi
 
+	call_nmcli c up $uuid || return $?
+
 	return $errors
 }
 

@@ -47,6 +47,8 @@ function set_gateway()
 		[ $? -ne 0 ] && errors=$((errors + 1))
 	done
 
+	call_nmcli c up $uuid || return $?
+
 	return $errors
 }
 
