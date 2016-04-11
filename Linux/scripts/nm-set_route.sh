@@ -47,6 +47,8 @@ function set_routes()
 		done
 	fi
 
+	call_nmcli c up $uuid || return $?
+
 	return $errors
 }
 

@@ -52,7 +52,12 @@ function set_routes()
 	fi
 }
 
+is_nm_active
+if [ $? -eq 0 ]; then
+	call_nm_script $0 "$@"
+	exit $?
+fi
+
 set_routes
 
-call_nm_script $0 "$@"
 # end of script

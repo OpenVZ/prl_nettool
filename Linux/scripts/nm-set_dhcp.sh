@@ -49,4 +49,6 @@ if [ $? -ne 0 ]; then
 	call_nmcli c modify $uuid ipv6.method link-local ||
 		exit $ret
 fi
+
+call_nmcli c up $uuid || exit $?
 # end of script
