@@ -149,7 +149,6 @@ int getNetInterfaceName( const char *pAdapterGuid, char* adapterName, int size)
 
 	char szKey[STR_SIZE+1];
 	WCHAR wcGuid[STR_SIZE+1];
-	char cGuid[STR_SIZE+1];
 	HKEY hKey;
 	DWORD dwType;
 	DWORD rSize = size;
@@ -161,21 +160,7 @@ int getNetInterfaceName( const char *pAdapterGuid, char* adapterName, int size)
 		return E_FAIL;
 	}
 
-#if _WIN32_WINNT < 0x0600
-	/* Windows XP/2003, wcstombs_s is missing in msvcrt.dll */
-	converted = wcstombs(cGuid, wcGuid, sizeof(cGuid) - 1);
-	if (converted != (size_t) -1)
-	{
-		/* Null-termination not guaranteed, ensure it
-		 * and fix 'converted' value to include null char */
-		cGuid[converted++] = '\0';
-	}
-#else
-	/* Windows Vista+ */
-	wcstombs_s(&converted, cGuid, sizeof(cGuid), wcGuid, sizeof(cGuid));
-#endif
-
-	snprintf(szKey, STR_SIZE,  "%s\\%s\\%s\\%s", S_NETWORK_REG_KEY, cGuid, pAdapterGuid, S_CONNECTION_REG_KEY);
+	snprintf(szKey, STR_SIZE,  "%s\\%ws\\%s\\%s", S_NETWORK_REG_KEY, wcGuid, pAdapterGuid, S_CONNECTION_REG_KEY);
 
 	rc = RegOpenKeyExA(HKEY_LOCAL_MACHINE, szKey, 0, KEY_READ, &hKey);
 
