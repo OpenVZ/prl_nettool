@@ -37,6 +37,12 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 			continue
 		fi
 
+		ip=$(route_ip $gw)
+		hop=$(route_gw $gw)
+		[ -n "$hop" ] && hop="gw $hop"
+		metric=$(route_metric $gw)
+		[ -n "$metric" ] && metric="metric $metric"
+
 		if is_ipv6 ${gw}; then
 			inet="inet6"
 			
@@ -48,7 +54,10 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 			/^\tup ip/ { print; next; } 
 			/^\tbroadcast/ { print; next; }
 			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
-			addgw {	print "\tup route -A '${inet}' add '${gw}' dev '${ETH_DEV}' ";  addgw=0 }
+			addgw {
+				print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
+				addgw=0
+				}
 			{ print }
 			' < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
 		else
@@ -60,7 +69,7 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 			/^\tbroadcast/ { print; next; }
 			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
 			addgw {	
-				print "\tup route -A '${inet}' add '${gw}' dev '${ETH_DEV}'";
+				print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
 				addgw=0
 				}
 			{ print }

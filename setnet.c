@@ -907,26 +907,36 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 			rc = remove_route_vista(if_it, "ipv6");
 #endif
 		} else {
+			struct route route = {NULL, NULL, NULL};
+			parse_route(gw->name, &route);
 			if (is_ipv6(gw->name)) {
-				sprintf(str, "interface ipv6 add route %s%s \"%s\" store=persistent",
-					gw->name, strchr(gw->name, '/') ? "" : "/128", if_it->name);
+
+				sprintf(str, "interface ipv6 add route %s%s \"%s\" %s %s%s store=persistent",
+					route.ip, strchr(route.ip, '/') ? "" : "/128", if_it->name,
+					route.gw ? route.gw : "", route.metric ? "metric=" : "",
+					route.metric ? route.metric : "");
 				rc = exec_netsh(str);
 			} else {
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 				char ip[100];
 				char mask[IP_LENGTH+1];
-				if (split_ip_mask(gw->name, ip, mask) < 0) {
-					strcpy(ip, gw->name);
+				if (split_ip_mask(route.ip, ip, mask) < 0) {
+					strcpy(ip, route.ip);
 					strcpy(mask, "255.255.255.255");
 				}
-				sprintf(str, "route add -p %s mask %s %s", ip, mask, if_ip);
+				char *hop = route.gw ? route.gw : if_ip;
+				sprintf(str, "route add -p %s mask %s %s %s %s", ip, mask, hop,
+						route.metric ? "metric" : "", route.metric ? route.metric : "");
 				rc = exec_cmd(str);
 #else
-				sprintf(str, "interface ipv4 add route %s%s \"%s\" store=persistent",
-					gw->name, strchr(gw->name, '/') ? "" : "/32", if_it->name);
+				sprintf(str, "interface ipv4 add route %s%s \"%s\" %s %s%s store=persistent",
+					route.ip, strchr(route.ip, '/') ? "" : "/32", if_it->name,
+					route.gw ? route.gw : "", route.metric ? "metric=" : "",
+					route.metric ? route.metric : "");
 				rc = exec_netsh(str);
 #endif
 			}
+			clear_route(&route);
 		}
 
 		gw = gw->next;

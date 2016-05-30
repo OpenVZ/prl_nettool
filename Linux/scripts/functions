@@ -708,3 +708,30 @@ call_nmcli()
 	return $res
 }
 
+# "X.X.X.X/Z=X.X.X.Ym100" -> "X.X.X.X/Z X.X.X.Y 100"
+split_route()
+{
+	local gw=$1
+	local metric=${gw##*m}
+	[ "$metric" = "$gw" ] && metric=
+	gw=${gw%m*}
+	local hop=${gw##*=}
+	[ "$hop" = "$gw" ] && hop=
+	echo "${gw%=*} $hop $metric"
+}
+
+route_ip()
+{
+	split_route $1 | awk -F '[ ]' '{print $1}'
+}
+
+route_gw()
+{
+	split_route $1 | awk -F '[ ]' '{print $2}'
+}
+
+route_metric()
+{
+	split_route $1 | awk -F '[ ]' '{print $3}'
+}
+

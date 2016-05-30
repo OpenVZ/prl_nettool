@@ -45,7 +45,7 @@ static void usage(int err_code)
 							"                              if dhcp was enabled\n" \
 							"   --search-domain <domains> - set search domain \n" \
 							"   --hostname <hostname>     - set hostname\n" \
-							"   --route <MAC> <IP>        - set route via <IP> dev <MAC> \n" );
+							"   --route <MAC> <IP1>[/MASK][=<IP2>][m<metric>] - set route to <IP1> via <IP2> dev <MAC> metric <metric>\n" );
 #ifdef _MAC_
 	fprintf(stderr, "prl_nettool clean \n");
 #endif

@@ -33,6 +33,7 @@ IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
 function set_routes()
 {
 	local is_changed="no"
+	local hop metric
 
 	if [ -f ${IFCFG} ] ; then
 		/bin/mv -f ${IFCFG} ${IFCFG}.bak 
@@ -41,7 +42,11 @@ function set_routes()
 
 	if [ "${ETH_GATEWAY}" != "remove" ] ; then
 		for gw in ${ETH_GATEWAY}; do
-			echo "${gw} dev ${ETH_DEV} scope link" >> $IFCFG
+			hop=$(route_gw $gw)
+			[ -n "$hop" ] && hop="via $hop"
+			metric=$(route_metric $gw)
+			[ -n "$metric" ] && metric="metric $metric"
+			echo "$(route_ip $gw) $hop dev ${ETH_DEV} $metric scope link" >> $IFCFG
 			is_changed="yes"
 		done
 	fi

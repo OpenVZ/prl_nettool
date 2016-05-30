@@ -253,12 +253,17 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 			else
 				snprintf(ip_cmd, sizeof(ip_cmd), "ip");
 
-			snprintf(cmd, PATH_MAX, " %s route del %s dev %s;"
-					" %s route add %s dev %s",
-					ip_cmd, gw->name, if_it->name,
-					ip_cmd, gw->name, if_it->name);
+			struct route route = {NULL, NULL, NULL};
+			parse_route(gw->name, &route);
+
+			snprintf(cmd, PATH_MAX, " %s route del %s %s %s dev %s;"
+					" %s route add %s %s %s dev %s %s %s",
+					ip_cmd, route.ip, route.gw ? "via" : "", route.gw, if_it->name,
+					ip_cmd, route.ip, route.gw ? "via" : "", route.gw, if_it->name,
+					route.metric ? "metric" : "", route.metric);
 			rc = run_cmd(cmd);
 
+			clear_route(&route);
 			gw = gw->next;
 		}
 		namelist_clean(&gws);

@@ -148,6 +148,46 @@ int is_ipv6(const char *ip)
 }
 
 
+void parse_route(const char *value, struct route *route)
+{
+	if (value == NULL)
+		return;
+
+	char *gw = strchr(value, '=');
+	if (gw == NULL)
+	{
+		route->ip = strdup(value);
+		return;
+	}
+
+	route->ip = strndup(value, gw - value);
+	++gw;
+
+	char *metric = strchr(gw, 'm');
+	if (metric == NULL)
+	{
+		route->gw = strdup(gw);
+		return;
+	}
+
+	route->gw = strndup(gw, metric - gw);
+	++metric;
+
+	route->metric = strdup(metric);
+}
+
+
+void clear_route(struct route *route)
+{
+	free(route->ip);
+	route->ip = NULL;
+	free(route->gw);
+	route->gw = NULL;
+	free(route->metric);
+	route->metric = NULL;
+}
+
+
 int split_ip_mask(const char *ip_mask, char* ip, char *mask)
 {
 	char tmp[100];
