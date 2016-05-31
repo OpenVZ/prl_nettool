@@ -33,48 +33,40 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 	for gw in ${ETH_GATEWAY}; do
 		inet="inet"
 
-		if [ "${gw}" == "remove" -o "${gw}" == "removev6" ] ; then
-			continue
-		fi
-
-		ip=$(route_ip $gw)
-		hop=$(route_gw $gw)
-		[ -n "$hop" ] && hop="gw $hop"
-		metric=$(route_metric $gw)
-		[ -n "$metric" ] && metric="metric $metric"
-
-		if is_ipv6 ${gw}; then
+		copy_fields=("address" "netmask" "broadcast")
+		if is_ipv6 ${gw} || [ "${gw}" = "removev6" ] ; then
 			inet="inet6"
-			
-			awk '
-			/^\tup route -A '${inet}' add .* dev '${ETH_DEV}'/ { next; }
-			/^\taddress/ { print; next; }
-			/^\tnetmask/ { print; next; } 
-			/^\tpre-down/ { print; next; } 
-			/^\tup ip/ { print; next; } 
-			/^\tbroadcast/ { print; next; }
-			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
-			addgw {
-				print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
-				addgw=0
-				}
-			{ print }
-			' < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
+			copy_fields=("${copy_fields[@]}" "pre-down" "up ip")
 		else
-			awk '
-			/^\tup route -A '${inet}' add .* dev '${ETH_DEV}'/ { next; }
-			/^\taddress/ { print; next; }
-			/^\tnetmask/ { print; next; } 
-			/^\tpre-up/ { print; next; } 
-			/^\tbroadcast/ { print; next; }
-			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
-			addgw {	
-				print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
-				addgw=0
-				}
-			{ print }
-			' < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
+			copy_fields=("${copy_fields[@]}" "pre-up")
 		fi
+
+		cmd=
+		for f in "${copy_fields[@]}"; do
+			cmd="$cmd"'
+				/^\t'"$f"'/ {print; next; }'
+		done
+
+		if [ "${gw}" == "remove" -o "${gw}" == "removev6" ] ; then
+			cmd="$cmd"'
+				/^\tup route -A '${inet}' add .* dev '${ETH_DEV}'/ { next; }'
+		else
+			ip=$(route_ip $gw)
+			hop=$(route_gw $gw)
+			[ -n "$hop" ] && hop="gw $hop"
+			metric=$(route_metric $gw)
+			[ -n "$metric" ] && metric="metric $metric"
+			cmd="$cmd"'
+				$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
+				addgw {
+					print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
+					addgw=0
+				}'
+		fi
+		cmd="$cmd"'
+			{ print }'
+
+		awk "${cmd}" < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
 	done
 
 	$path/debian-restart.sh
