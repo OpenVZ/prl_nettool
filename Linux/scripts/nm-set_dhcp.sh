@@ -26,8 +26,6 @@ PROTO=$3
 
 PROTO4="manual"
 PROTO6="manual"
-CLEAN4="no"
-CLEAN6="no"
 
 uuid=`nm_check_and_create $ETH_DEV $ETH_MAC` ||
 	exit $?
@@ -35,10 +33,8 @@ uuid=`nm_check_and_create $ETH_DEV $ETH_MAC` ||
 for proto in ${PROTO}; do
 	if [ "x$proto" == "x4" ] ; then
 		PROTO4="auto"
-		CLEAN4="yes"
 	elif [ "x$proto" == "x6" ] ; then
 		PROTO6="auto"
-		CLEAN6="yes"
 	fi
 done
 
@@ -48,10 +44,8 @@ if [ $? -ne 0 ]; then
 		exit $?
 fi
 
-if [ $CLEAN4 == "yes" ] ; then
-	# clean IPv4 addreses and gw from connection
-	call_nmcli c modify $uuid ipv4.gateway ""
-	call_nmcli c modify $uuid ipv4.address ""
+if [ $PROTO4 == "auto" ] ; then
+	nmcli_clean_ip_and_gw $uuid 4;
 fi
 
 call_nmcli c modify $uuid ipv6.method $PROTO6
@@ -60,10 +54,8 @@ if [ $? -ne 0 ]; then
 		exit $ret
 fi
 
-if [ $CLEAN6 == "yes" ] ; then
-	# clean IPv6 addreses and gw from connection
-	call_nmcli c modify $uuid ipv6.gateway ""
-	call_nmcli c modify $uuid ipv6.address ""
+if [ $PROTO6 == "auto" ] ; then
+	nmcli_clean_ip_and_gw $uuid 6;
 fi
 
 call_nmcli c up $uuid || exit $?
