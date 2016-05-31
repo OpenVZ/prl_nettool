@@ -29,6 +29,7 @@
 #include <sdkddkver.h>
 #include <windows.h>
 #else
+#define _GNU_SOURCE
 #include <dirent.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -468,14 +469,14 @@ int apply_parameters()
 			}
 		}
 
-		if (netinfo_head != NULL && opt == NET_OPT_SEARCH)
+		if (opt == NET_OPT_SEARCH)
 		{
 			struct nettool_mac *mac_it = get_opt_mac(NULL, opt);
 			int rc;
 			if (mac_it == NULL)
 				continue;
 			//set search domains
-			rc = set_search_domain(netinfo_head, mac_it);
+			rc = set_search_domain(mac_it);
 			if (rc)
 				rc2 = rc;
 		}

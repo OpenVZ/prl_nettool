@@ -364,7 +364,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 }
 
 
-int set_search_domain(struct netinfo *netinfo_header, struct nettool_mac *params)
+int set_search_domain(struct nettool_mac *params)
 {
 	char domains[1024]; //to store value
 
@@ -409,6 +409,8 @@ int set_search_domain(struct netinfo *netinfo_header, struct nettool_mac *params
 	}
 
 	rc = RegCloseKey(hKey);
+
+	debug("set_search_domains: %s\n", domains);
 
 	return 0;
 }
@@ -620,14 +622,19 @@ int set_hostname(struct nettool_mac *params)
 
 	/* set ComputerName properties (in upper case) */
 	ret = DnsHostnameToComputerNameA(computer_name, netbios_name, &netbios_name_len);
-	if (ret == 0) //DnsHostnameToComputerNameA return 0 if conversion fails.
-		return 1;
+	if (ret == 0) { //DnsHostnameToComputerNameA return 0 if conversion fails.
+		status = GetLastError();
+		error(status, "Cannot convert dns hostname to computer name\n");
+		return status;
+	}
 
 	for (i = 0; reg_computer_name[i] !=  NULL; i++) {
 		ret = set_reg_value(reg_computer_name[i], S_COMPUTER_REG_NAME, netbios_name);
 		if (ret)
 			return ret;
 	}
+
+	debug("set_hostname host=%s domain=%s computer=%s\n", computer_name, domain, netbios_name);
 
 	return 0;
 }

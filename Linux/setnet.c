@@ -120,11 +120,9 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params){
 	return rc;
 }
 
-int set_search_domain(struct netinfo *netinfo_head, struct nettool_mac *params) {
+int set_search_domain(struct nettool_mac *params) {
 	char cmd[PATH_MAX+1];
 	int rc;
-
-	VARUNUSED(netinfo_head);
 
 	if (params->value == NULL)
 		return 0;

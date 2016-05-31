@@ -52,7 +52,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params);
 
 int set_dns(struct netinfo *if_it, struct nettool_mac *params);
 
-int set_search_domain(struct netinfo *netinfo_header, struct nettool_mac *params);
+int set_search_domain(struct nettool_mac *params);
 
 int set_hostname(struct nettool_mac *params);
 
