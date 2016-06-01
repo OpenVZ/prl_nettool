@@ -44,9 +44,7 @@ if [ $? -ne 0 ]; then
 		exit $?
 fi
 
-if [ $PROTO4 == "auto" ] ; then
-	nmcli_clean_ip_and_gw $uuid 4;
-fi
+if [ $PROTO4 == "auto" ] ; then	nmcli_clean_ip_and_gw $uuid 4; fi
 
 call_nmcli c modify $uuid ipv6.method $PROTO6
 if [ $? -ne 0 ]; then
@@ -54,9 +52,7 @@ if [ $? -ne 0 ]; then
 		exit $ret
 fi
 
-if [ $PROTO6 == "auto" ] ; then
-	nmcli_clean_ip_and_gw $uuid 6;
-fi
+if [ $PROTO6 == "auto" ] ; then	nmcli_clean_ip_and_gw $uuid 6; fi
 
 call_nmcli c up $uuid || exit $?
 # end of script
