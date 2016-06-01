@@ -29,13 +29,19 @@ IFCFG=${IFCFG_DIR}/routes
 
 function set_routes()
 {
+	local hop metric
+
 	[ -f ${IFCFG} ] && \
 		/bin/rm -f ${IFCFG} > /dev/null 2>&1
 	touch ${IFCFG}
 
 	for gw in ${ETH_GATEWAY}; do
 		if [ "${gw}" != "remove" -a "${gw}" != "removev6" ] ; then
-			echo "${gw} - - ${ETH_DEV}" >> ${IFCFG}
+			hop=$(route_gw $gw)
+			[ -z "$hop" ] && hop="-"
+			metric=$(route_metric $gw)
+			[ -n "$metric" ] && metric="metric $metric"
+			echo "$(route_ip $gw) $hop - ${ETH_DEV} $metric" >> ${IFCFG}
 		fi
 	done
 	

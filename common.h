@@ -89,4 +89,14 @@ void debug(const char *fmt, ...);
 int is_ipv6(const char *ip);
 int is_ipv6_supported();
 
+struct route
+{
+	char *ip;
+	char *gw;
+	char *metric;
+};
+
+void parse_route(const char *value, struct route *route);
+void clear_route(struct route *route);
+
 #endif

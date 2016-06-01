@@ -33,14 +33,15 @@ function set_routes()
 	call_nmcli c modify $uuid ipv4.routes ""
 	call_nmcli c modify $uuid ipv6.routes ""
 
-	local errors=0
+	local errors=0 args
 
 	if [ "${ETH_GATEWAY}" != "remove" ] ; then
 		for gw in ${ETH_GATEWAY}; do
+			args=$(split_route $gw)
 			if is_ipv6 ${gw}; then
-				call_nmcli c modify $uuid +ipv6.routes ${gw}
+				call_nmcli c modify $uuid +ipv6.routes "${args}"
 			else
-				call_nmcli c modify $uuid +ipv4.routes ${gw}
+				call_nmcli c modify $uuid +ipv4.routes "${args}"
 			fi
 
 			[ $? -ne 0 ] && errors=$((errors + 1))
