@@ -96,7 +96,7 @@ struct route
 	char *metric;
 };
 
-void parse_route(const char *value, struct route *route);
+void parse_route(char *value, struct route *route);
 void clear_route(struct route *route);
 
 #endif

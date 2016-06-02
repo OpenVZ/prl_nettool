@@ -148,31 +148,25 @@ int is_ipv6(const char *ip)
 }
 
 
-void parse_route(const char *value, struct route *route)
+void parse_route(char *value, struct route *route)
 {
-	if (value == NULL)
+	if (!value)
 		return;
 
 	char *gw = strchr(value, '=');
-	if (gw == NULL)
-	{
-		route->ip = strdup(value);
+	if (gw != NULL)
+		*gw++ = '\0';
+	route->ip = strdup(value);
+
+	if (!gw)
 		return;
-	}
-
-	route->ip = strndup(value, gw - value);
-	++gw;
-
 	char *metric = strchr(gw, 'm');
-	if (metric == NULL)
-	{
-		route->gw = strdup(gw);
+	if (metric != NULL)
+		*metric++ = '\0';
+	route->gw = strdup(gw);
+
+	if (!metric)
 		return;
-	}
-
-	route->gw = strndup(gw, metric - gw);
-	++metric;
-
 	route->metric = strdup(metric);
 }
 
