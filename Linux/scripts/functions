@@ -682,6 +682,15 @@ nm_check_and_create()
 	echo $uuid
 }
 
+function nmcli_clean_ip_and_gw()
+{
+	local uuid=$1
+	local ipv=$2
+	# clean IPvX addreses and gateway from connection
+	call_nmcli c modify $uuid ipv${ipv}.gateway ""
+	call_nmcli c modify $uuid ipv${ipv}.address ""
+}
+
 call_nm_script()
 {
 	local from=$1
