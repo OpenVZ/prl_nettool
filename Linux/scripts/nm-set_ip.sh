@@ -131,8 +131,7 @@ function set_ip()
 	done
 
 	if [ $IP4_COUNT -eq 0 ]; then
-		call_nmcli c modify $uuid ipv4.gateway ""
-		call_nmcli c modify $uuid ipv4.address ""
+		nmcli_clean_ip_and_gw $uuid 4
 		if [ $USE_DHCPV4 -eq 0 ]; then
 			call_nmcli c modify $uuid ipv4.method link-local ||
 				return $?
@@ -143,8 +142,7 @@ function set_ip()
 	fi
 
 	if [ $IP6_COUNT -eq 0 ]; then
-		call_nmcli c modify $uuid ipv6.gateway ""
-		call_nmcli c modify $uuid ipv6.address ""
+		nmcli_clean_ip_and_gw $uuid 6
 		if [ $USE_DHCPV6 -eq 0 ]; then
 			call_nmcli c modify $uuid ipv6.method link-local ||
 				return $?
