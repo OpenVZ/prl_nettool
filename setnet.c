@@ -410,6 +410,9 @@ int set_search_domain(struct nettool_mac *params)
 
 	rc = RegCloseKey(hKey);
 
+	/* refresh tcp/ip config to take into effect changes immediatly */
+	exec_cmd("ipconfig /renew");
+
 	debug("set_search_domains: %s\n", domains);
 
 	return 0;
