@@ -608,6 +608,45 @@ generate_uuid()
 	fi
 }
 
+function get_suse_config_name()
+{
+	# Parameters: <dev> <MAC_addr>
+	#  <dev>        - name of device (example: eth1)
+	#  <MAC_addr>   - MAC address of device
+	# problem: network configs on suse 10(,9) and suse 11 contains the same information,
+	# but have different config names
+	# examples:
+	#  suse 10:     ifcfg-eth-id-00:0c:29:90:c3:91
+	#  suse 11:     ifcfg-eth1
+	#  opensuse 4x: ifcfg-eth1
+
+	local ETH_DEV=$1
+	local ETH_MAC=$2
+	IFCFG_DIR=/etc/sysconfig/network
+
+	ETH_DEV_CFG=ifcfg-$ETH_DEV
+	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
+	[ -f $IFCFG ] && return 0
+
+	ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
+	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
+	[ -f $IFCFG ] && return 0
+
+	# /etc/SuSE-release is deprecated and will be removed in the future
+	if [ -f /etc/os-release ]; then
+		RELEASE_FILE=/etc/os-release
+	else
+		RELEASE_FILE=/etc/SuSE-release
+	fi
+
+	#if config not found - check suse-release
+	grep -qi "^[[:space:]]*VERSION.*10" $RELEASE_FILE
+	[ $? -eq 0 ] && return 0
+
+	ETH_DEV_CFG=ifcfg-$ETH_DEV
+	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
+}
+
 is_nm_present()
 {
 	need_to_disable_network_manager || return 0
