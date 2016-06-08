@@ -38,29 +38,6 @@ for proto in ${PROTO}; do
 done
 
 
-function get_config_name()
-{ #problem: network configs on suse 10(,9) and suse 11 contains the same information,
-  #but have different config names
-  #examples:
-  #suse 10: ifcfg-eth-id-00:0c:29:90:c3:91
-  #suse 11: ifcfg-eth1
-
-  ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
-  IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
-  [ -f $IFCFG ] && return 0
-  
-  ETH_DEV_CFG=ifcfg-$ETH_DEV
-  IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
-  [ -f $IFCFG ] && return 0
-
-  #if config not found - check suse-release
-  grep -qi "^[[:space:]]*VERSION.*1[1-9]" /etc/SuSE-release
-  [ $? -eq 0 ] && return 0
-
-  ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
-  IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
-}
-
 function create_config()
 {
 	local dhcp_type="dhcp"
@@ -112,7 +89,7 @@ function set_dhcp()
 	/sbin/ifup ${ETH_DEV}
 }
 
-get_config_name
+get_suse_config_name $ETH_DEV $ETH_MAC
 set_dhcp
 
 exit 0
