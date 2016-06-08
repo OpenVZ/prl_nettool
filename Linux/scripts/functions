@@ -624,11 +624,11 @@ function get_suse_config_name()
 	local ETH_MAC=$2
 	IFCFG_DIR=/etc/sysconfig/network
 
-	ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
+	ETH_DEV_CFG=ifcfg-$ETH_DEV
 	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
 	[ -f $IFCFG ] && return 0
 
-	ETH_DEV_CFG=ifcfg-$ETH_DEV
+	ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
 	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
 	[ -f $IFCFG ] && return 0
 
@@ -640,10 +640,10 @@ function get_suse_config_name()
 	fi
 
 	#if config not found - check suse-release
-	grep -qi "^[[:space:]]*VERSION.*[41][1-9]" $RELEASE_FILE
+	grep -qi "^[[:space:]]*VERSION.*10" $RELEASE_FILE
 	[ $? -eq 0 ] && return 0
 
-	ETH_DEV_CFG=ifcfg-eth-id-$ETH_MAC
+	ETH_DEV_CFG=ifcfg-$ETH_DEV
 	IFCFG=${IFCFG_DIR}/${ETH_DEV_CFG}
 }
 
