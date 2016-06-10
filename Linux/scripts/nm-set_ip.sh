@@ -94,13 +94,14 @@ function set_ip()
 	local plusv6=""
 	local errors=0
 
-	new_ips="${IP_MASKS}"
-	for ip_mask in ${new_ips}; do
+	for ip_mask in ${IP_MASKS}; do
+		[ "${ip_mask}" = "remove" ] && continue
 		if is_ipv6 ${ip_mask}; then
 			let IP6_COUNT=IP6_COUNT+1
 		else
 			let IP4_COUNT=IP4_COUNT+1
 		fi
+		new_ips="${new_ips} ${ip_mask}"
 	done
 
 	call_nmcli c modify $uuid ipv4.method auto ||
@@ -108,7 +109,6 @@ function set_ip()
 	call_nmcli c modify $uuid ipv6.method auto ||
 		return $?
 
-	new_ips="${IP_MASKS}"
 	for ip_mask in ${new_ips}; do
 		if ! is_ipv6 ${ip_mask}; then
 			if echo ${ip_mask} | grep -q '/' ; then
