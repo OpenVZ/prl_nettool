@@ -69,7 +69,7 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 		awk "${cmd}" < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
 	done
 
-	$path/debian-restart.sh
+	$path/debian-restart.sh ${ETH_DEV}
 fi
 exit 0
 # end of script

@@ -91,7 +91,7 @@ else
 
 fi
 
-$path/debian-restart.sh
+$path/debian-restart.sh ${ETH_DEV}
 
 exit 0
 # end of script
