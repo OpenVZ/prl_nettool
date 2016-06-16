@@ -703,7 +703,16 @@ nm_check_and_create()
 	create_nm_if_config $dev $mac || return $?
 
 	call_nmcli c show $name
-		is_old=$?
+	is_old=$?
+
+	if [ $is_old -eq 0 ]; then
+		old_mac=`nm_get_if_field $dev 802-3-ethernet.mac-address` || return $?
+		if [ ${mac^^} != ${old_mac^^} ]; then
+			call_nmcli c delete $name ||
+				return $?
+			is_old=1
+		fi
+	fi
 
 	if [ $is_old -ne 0 ]; then
 		call_nmcli c add type ethernet ifname $dev con-name $name mac $mac ||
