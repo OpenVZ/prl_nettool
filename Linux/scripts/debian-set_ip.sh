@@ -131,12 +131,12 @@ function create_config()
 		echo "auto ${device}${ifnum_postfix}" >> $CONFIGFILE
 	fi
 
-	echo "iface ${device}${ifnum_postfix} ${inet} static" >> $CONFIGFILE
-
 	if [ "${ip}" == "remove" ] ; then
 		echo "" >> $CONFIGFILE
 		return
 	fi
+
+	echo "iface ${device}${ifnum_postfix} ${inet} static" >> $CONFIGFILE
 
 	echo "	address ${ip}
 	netmask ${mask}" >> $CONFIGFILE
