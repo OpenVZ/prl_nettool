@@ -144,7 +144,7 @@ function set_ip()
 	if [ $IP6_COUNT -eq 0 ]; then
 		nmcli_clean_ip_and_gw $uuid 6
 		if [ $USE_DHCPV6 -eq 0 ]; then
-			call_nmcli c modify $uuid ipv6.method link-local ||
+			call_nmcli c modify $uuid ipv6.method ignore ||
 				return $?
 		fi
 	else

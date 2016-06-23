@@ -38,6 +38,8 @@ for proto in ${PROTO}; do
 	fi
 done
 
+[ $PROTO4 == "auto" -a $PROTO6 != "auto" ] && PROTO6="ignore"
+
 call_nmcli c modify $uuid ipv4.method $PROTO4
 if [ $? -ne 0 ]; then
 	call_nmcli c modify $uuid ipv4.method link-local ||
