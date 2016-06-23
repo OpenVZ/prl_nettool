@@ -159,17 +159,33 @@ function move_configs()
 	popd > /dev/null 2>&1
 }
 
+function remove_ips()
+{
+        local ifcfg="${IFCFG_DIR}/bak/${ETH_DEV_CFG}"
+        local old_ifcfg="${IFCFG_DIR}/${ETH_DEV_CFG}"
+
+		[ ! -f $old_ifcfg ] && return 0
+
+		cat $old_ifcfg > $ifcfg || error "Cant copy ${ETH_DEV_CFG}" $VZ_FS_NO_DISK_SPACE
+
+		del_param "${ifcfg}" IPV6ADDR_SECONDARIES
+		del_param "${ifcfg}" IPV6ADDR
+		del_param "${ifcfg}" "IPADDR\d*"
+		del_param "${ifcfg}" "NETMASK\d*"
+		return 0
+}
+
 function set_ip()
 {
 	local ip_mask ip mask
 	local new_ips
-
 
 	rm -rf ${IFCFG_DIR}/bak/ >/dev/null 2>&1
 	mkdir -p ${IFCFG_DIR}/bak
 
 	new_ips="${IP_MASKS}"
 	for ip_mask in ${new_ips}; do
+		[ "${ip_mask}" = "remove" ] && remove_ips && return $?
 		if is_ipv6 ${ip_mask}; then
 			let IP6_COUNT=IP6_COUNT+1
 		else
@@ -201,7 +217,10 @@ function set_ip()
 			add_ip6 "${ip}" "${mask}" "${IF6NUM}"
 		fi
 	done
+}
 
+function apply()
+{
 	#stop adapter
 	if [ "x$RESTART_NETWORK" = "xyes" ]; then
 		/etc/init.d/network stop
@@ -229,6 +248,6 @@ if [ $? -eq 0 ]; then
 	exit $?
 fi
 
-set_ip
+set_ip && apply
 
 # end of script
