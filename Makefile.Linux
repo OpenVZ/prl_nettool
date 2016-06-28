@@ -6,6 +6,7 @@ DESTDIR=
 LDFLAGS = -lnetlink
 SBINDIR=$(DESTDIR)/usr/sbin
 SCRIPTSDIR=$(DESTDIR)/usr/lib/parallels-tools/tools/scripts
+CLOUDINITDIR=$(DESTDIR)/etc/cloud/cloud.cfg.d
 
 all: prl_nettool
 
@@ -25,3 +26,5 @@ install:
 	for f in Linux/scripts/*; do \
 		install -m 755 $$f $(SCRIPTSDIR); \
 	done
+	mkdir -p $(CLOUDINITDIR)
+	install -m 644 50_prl_nettool.cfg $(CLOUDINITDIR)
