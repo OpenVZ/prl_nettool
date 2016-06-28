@@ -22,6 +22,7 @@ NMCONFFILE="$NWSYSTEMDIR/NetworkManager.conf"
 NWSYSTEMCONNECTIONS="$NWSYSTEMDIR/system-connections"
 NWCONFDIR="$NWSYSTEMDIR/conf.d"
 NWMANAGER="/etc/init.d/NetworkManager"
+NWMANAGER_FAILED=0
 [ -f "${NWMANAGER}" ] || NWMANAGER="/etc/init.d/network-manager"
 SYSTEMCTL="/bin/systemctl"
 INITDIR="/etc/init.d"
@@ -692,6 +693,7 @@ no-auto-default+=$2
 plugins-=ifcfg-rh
 EOF
 	service_command NetworkManager restart
+	NWMANAGER_FAILED=0
 }
 
 nm_check_and_create()
@@ -759,6 +761,18 @@ call_nmcli()
 {
 	out=`LC_ALL=C nmcli "$@" 2>&1`
 	res=$?
+
+	# NetworkManager is offline for first time
+	if [ $res -eq 8 -a $NWMANAGER_FAILED -eq 0 ]; then
+		# wait 30s for NetworkManager
+		if nm-online -t 30 >/dev/null 2>&1; then
+			out=`LC_ALL=C nmcli "$@" 2>&1`
+			res=$?
+		else
+			out="$out (NetworkManager did not start in 30 seconds)"
+			NWMANAGER_FAILED=1
+		fi
+	fi
 
 	[ $res -ne 0 ] && echo "[`date`]: ERROR at 'nmcli $*'
 	called from ${BASH_SOURCE[1]}:${BASH_LINENO[1]} ${FUNCNAME[1]}():
