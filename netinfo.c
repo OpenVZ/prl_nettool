@@ -383,8 +383,10 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 			continue;
 
 		if (mac_to_str(pCurrAddresses->PhysicalAddress, pCurrAddresses->PhysicalAddressLength,
-						mac_buf, MAC_LENGTH+1) == NULL)
+						mac_buf, MAC_LENGTH+1) == NULL) {
+			error(0, "Invalid mac address");
 			return ERROR_INVALID_PARAMETER;
+		}
 
 		if_it = netinfo_search_mac( netinfo_head, mac_buf);
 		if (if_it == NULL)
@@ -416,6 +418,7 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 			int is_manual = 0;
 			if (socket_address_to_str(&(pUnicast->Address), ip, sizeof(ip)) < 0) {
 				netinfo_free(if_it);
+				error(0, "Invalid IP address");
 				return ERROR_INVALID_PARAMETER;
 			}
 
@@ -449,6 +452,7 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 
 			if (socket_address_to_str(&(pDnServer->Address), ip, sizeof(ip)) < 0) {
 				netinfo_free(if_it);
+				error(0, "Invalid DNS address");
 				return -1;
 			}
 
@@ -462,6 +466,7 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 			char ip[100];
 			if (socket_address_to_str(&(pCurrAddresses->FirstGatewayAddress->Address), ip, sizeof(ip)) < 0) {
 				netinfo_free(if_it);
+				error(0, "Invalid GW address");
 				return ERROR_INVALID_PARAMETER;
 			}
 
@@ -506,8 +511,10 @@ void wait_for_start(const struct namelist *adapters)
 		case ERROR_NO_DATA:
 		case ERROR_FILE_NOT_FOUND:
 			continue;
+		case NO_ERROR:
+			break;
 		default:
-			error(rc, "get_device_list failed");
+			error(rc, "get_device_list failed: %d", rc);
 			return;
 		}
 

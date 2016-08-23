@@ -6,7 +6,7 @@ WLH = -D_WIN32_WINNT=0x0600
 WXP = -D_WIN32_WINNT=0x0502
 CFLAGS = -Wall -Wno-unused -Wno-unused-function -O2 -D_WIN_ $(WINVER) -DVERSION=\"$(VERSION)\"
 DESTDIR=
-LDFLAGS = -liphlpapi -ldnsapi -lole32 -lws2_32
+LDFLAGS = -liphlpapi -ldnsapi -lole32 -lws2_32 -lcfgmgr32
 TARGET = prl_nettool.exe
 MKDIR = mkdir -p
 MV = mv -f
