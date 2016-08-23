@@ -28,6 +28,7 @@
 #ifdef _WIN_
 #include <sdkddkver.h>
 #include <windows.h>
+#include <cfgmgr32.h>
 #else
 #define _GNU_SOURCE
 #include <dirent.h>
@@ -43,6 +44,9 @@
 #include "netinfo.h"
 #include "setnet.h"
 #include "namelist.h"
+
+/* 2 mins to wait for PnP and SCM start completed */
+#define SCM_TIMEOUT (120*1000)
 
 extern struct nettool_options net_opts;
 
@@ -648,6 +652,16 @@ int do_work()
 	debug("%s single_app_lock() done", __FUNCTION__);
 
 #ifdef _WIN_
+	HANDLE h = OpenEventW(SYNCHRONIZE, FALSE, L"SC_AutoStartComplete");
+	DWORD r = ERROR_INVALID_HANDLE;
+	if (h != NULL) {
+		r = WaitForSingleObject(h, SCM_TIMEOUT);
+		CloseHandle(h);
+	}
+	debug("wait for SCM completed: %d", (int)r);
+
+	r = CMP_WaitNoPendingInstallEvents(SCM_TIMEOUT);
+	debug("wait for PNP completed: %d", (int)r);
 
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 	//on win2k3 prl_nettool disable/enable adapter in apply_parameters().
@@ -705,15 +719,15 @@ int main(int argc, char* argv[])
 
 	debug("%s started", argv[0]);
 
-#ifdef _WIN_
-
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
-
+#if defined(_WIN_) && (NTDDI_VERSION < NTDDI_LONGHORN)
 	//if current vista or above, then run prl_nettool_vista
 	if (is_ipv6_supported())
 	{
 		char cmd[4000];
-		int rc ;
+		DWORD rc = 0;
+		PROCESS_INFORMATION procinfo = { 0 };
+		STARTUPINFOW startinfo = { 0 };
+		WCHAR cmdline[4000];
 
 		debug("is_ipv6_supported true");
 
@@ -734,49 +748,33 @@ int main(int argc, char* argv[])
 		}
 
 		debug("exec %s", cmd);
-#ifdef _WIN_
+
+		startinfo.cb = sizeof(startinfo);
+		_snwprintf(cmdline, sizeof(cmdline)/sizeof(*cmdline), L"%hs", cmd);
+		if (!CreateProcessW(NULL,
+					cmdline,		// command line
+					NULL,		// process security attributes
+					NULL,		// primary thread security attributes
+					FALSE,		// handles are inherited
+					0,			// creation flags
+					NULL,		// use parent's environment
+					NULL,		// use parent's current directory
+					&startinfo,		// STARTUPINFO pointer
+					&procinfo))		// receives PROCESS_INFORMATION
 		{
-			PROCESS_INFORMATION procinfo = { 0 };
-			STARTUPINFOW startinfo = { 0 };
-			WCHAR cmdline[4000];
-
-			startinfo.cb = sizeof(startinfo);
-			_snwprintf(cmdline, sizeof(cmdline)/sizeof(*cmdline), L"%hs", cmd);
-			if (!CreateProcessW(NULL,
-					    cmdline,		// command line
-					    NULL,		// process security attributes
-					    NULL,		// primary thread security attributes
-					    FALSE,		// handles are inherited
-					    0,			// creation flags
-					    NULL,		// use parent's environment
-					    NULL,		// use parent's current directory
-					    &startinfo,		// STARTUPINFO pointer
-					    &procinfo))		// receives PROCESS_INFORMATION
-			{
-				rc = GetLastError();
-				error(rc, "Failed to exec %s", cmd);
-				exit(rc);
-			}
-
-			WaitForSingleObject(procinfo.hProcess, INFINITE);
-			CloseHandle(procinfo.hProcess);
-			CloseHandle(procinfo.hThread);
-			return 0;
+			rc = GetLastError();
+			error(rc, "Failed to exec %s", cmd);
+			exit(rc);
 		}
-#else
-		rc = system(cmd);
-		debug("exec %s rc = %d", cmd, rc);
-		if (rc < 0) {
-			error(errno, "Failed to exec %s", cmd);
-			exit(errno);
-		}
-#endif
+
+		WaitForSingleObject(procinfo.hProcess, INFINITE);
+		GetExitCodeProcess(procinfo.hProcess, &rc);
+		CloseHandle(procinfo.hProcess);
+		CloseHandle(procinfo.hThread);
 
 		return rc;
 	}
-#endif
-
-#endif
+#endif // _WIN_ && NTDDI_VERSION < NTDDI_LONGHORN)
 
 #ifdef _LIN_
 	//save command to syslog

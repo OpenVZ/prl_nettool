@@ -536,6 +536,8 @@ static int save_adapter_disabled(const char *name, int enable)
 	print_namelist_to_str_delim(&adapters, save_buf, sizeof(save_buf), ":");
 	namelist_clean(&adapters);
 
+	debug("disabled adapters list: %s", save_buf);
+
 	rc = set_reg_value(TOOL_GUEST_UTILS_REGISTRY_PATH, DISABLED_ADAPTERS_REG_KEY, save_buf);
 
 	return rc;
