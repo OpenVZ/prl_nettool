@@ -794,6 +794,38 @@ call_nmcli()
 	return $res
 }
 
+clean_nm_connections()
+{
+	local dev=$1
+	local mac=$2
+	local macnw=$3
+	local nmdev=""
+	local need_restart=0
+
+	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		for i in $NWSYSTEMCONNECTIONS/*; do
+			cat "$i" | grep -E "$mac|$macnw" >/dev/null 2>&1
+			[ $? -eq 0 ] && rm -f "$i" && continue
+			type nmcli > /dev/null 2>&1 || continue
+			for nmdev in `nmcli c show 2>/dev/null | grep "^$(basename '$i')" | awk -v device=0 '{if (device == 0) {device=index($0, "DEVICE"); next}; print substr($0, device)}'`; do
+				[ "x$nmdev" = "x$dev" ] && rm -f "$i" && need_restart=1 && break
+			done
+		done
+	fi
+
+	[ $need_restart -eq 1 ] && $NWMANAGER restart > /dev/null 2>&1
+}
+
+nm_connection_reload()
+{
+	local dev=$1
+
+	type nmcli > /dev/null 2>&1 || return
+
+	nmcli connection reload $1 > /dev/null 2>&1
+}
+
 # "X.X.X.X/Z=X.X.X.Ym100" -> "X.X.X.X/Z X.X.X.Y 100"
 split_route()
 {

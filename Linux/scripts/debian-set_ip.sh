@@ -252,13 +252,7 @@ function set_ip_nm() {
 	local ip_mask ip mask
 	local new_ips
 
-	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		for i in $NWSYSTEMCONNECTIONS/*; do
-			cat "$i" | grep -E "$ETH_MAC|$ETH_MAC_NW" >/dev/null 2>&1
-			[ $? -eq 0 ] && rm -f "$i"
-		done
-	fi
+	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
 
 	if [ ! -f "${NWMANAGER}" ] ; then
 		echo "Network manager ${NWMANAGER} not found"
@@ -329,6 +323,8 @@ mtu=0" >> $NWSYSTEMCONNECTIONS/${ETH_DEV}
 
 	remove_debian_interfaces ${ETH_DEV}
 	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+
+	nm_connection_reload ${ETH_DEV}
 }
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
