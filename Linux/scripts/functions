@@ -27,6 +27,8 @@ NWMANAGER_FAILED=0
 SYSTEMCTL="/bin/systemctl"
 INITDIR="/etc/init.d"
 NETTOOL_LOG="/var/log/vz-nettool.log"
+DEBIAN_CONFIGFILE="/etc/network/interfaces"
+DEBIAN_CONFIGFILES="$DEBIAN_CONFIGFILE /etc/network/interfaces.d/*"
 
 #options used in *-set_ip.sh
 USE_DHCPV4=0
@@ -310,6 +312,17 @@ function remove_debian_interface()
 	' < ${cfg} > ${cfg}.$$ && mv -f ${cfg}.$$ ${cfg}
 
 	rm -f ${cfg}.$$ 2>/dev/null
+}
+
+function remove_debian_interfaces()
+{
+	local dev="$1"
+	local cf
+
+	for cf in $DEBIAN_CONFIGFILES; do
+		[ ! -f $cf ] && continue
+		remove_debian_interface $dev $cf
+	done
 }
 
 function change_hostname()

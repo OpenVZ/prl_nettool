@@ -8,7 +8,6 @@
 prog="$0"
 path="${prog%/*}"
 funcs="$path/functions"
-CONFIGFILE="/etc/network/interfaces"
 
 if [ -f "$funcs" ] ; then
 	. $funcs

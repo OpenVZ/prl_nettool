@@ -64,14 +64,12 @@ else
 
 		cat $CONFIGFILE | grep "^[[:space:]]*INTERFACES.*$ETH_DEV" >/dev/null 2>&1
 	else
-		CONFIGFILE="/etc/network/interfaces"
-
 		# config was not found
-		[ -f "${CONFIGFILE}" ] || exit 2
+		[ -f "${DEBIAN_CONFIGFILE}" ] || exit 2
 
 		inet="inet"
 
-		cat $CONFIGFILE | grep "^[[:space:]]*iface $ETH_DEV $inet" | grep dhcp >/dev/null 2>&1
+		cat $DEBIAN_CONFIGFILE | grep "^[[:space:]]*iface $ETH_DEV $inet" | grep dhcp >/dev/null 2>&1
 	fi
 
 	[ $? -eq 0 ] && exit 0 || exit 1

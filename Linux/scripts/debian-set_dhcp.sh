@@ -89,25 +89,23 @@ mtu=0" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
 
 	chmod 0600 $NWSYSTEMCONNECTIONS/$ETH_DEV
 
-	remove_debian_interface ${ETH_DEV} $CONFIGFILE
-	remove_debian_interface "${ETH_DEV}:[0-9]+" $CONFIGFILE
+	remove_debian_interfaces ${ETH_DEV}
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
 else
-	CONFIGFILE="/etc/network/interfaces"
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+	remove_debian_interfaces ${ETH_DEV}
 
-	remove_debian_interface "${ETH_DEV}:[0-9]+" ${CONFIGFILE}
-	remove_debian_interface ${ETH_DEV} ${CONFIGFILE}
-
-	echo "allow-hotplug ${ETH_DEV}" >> $CONFIGFILE
-	echo "auto ${ETH_DEV}" >> $CONFIGFILE
+	echo "allow-hotplug ${ETH_DEV}" >> $DEBIAN_CONFIGFILE
+	echo "auto ${ETH_DEV}" >> $DEBIAN_CONFIGFILE
 
 	if [ "x$PROTO4" == "xyes" ] ; then
 		#clean old IPv4
 		ip -4 addr flush dev ${ETH_DEV}
-		echo >> $CONFIGFILE
-		echo "iface ${ETH_DEV} inet dhcp" >> $CONFIGFILE
+		echo >> $DEBIAN_CONFIGFILE
+		echo "iface ${ETH_DEV} inet dhcp" >> $DEBIAN_CONFIGFILE
 		# 2.6.35 kernel doesn't flush IPv6 addresses
-		echo "	pre-down ip -6 addr flush dev ${ETH_DEV} scope global || :" >> $CONFIGFILE
-		echo >> $CONFIGFILE
+		echo "	pre-down ip -6 addr flush dev ${ETH_DEV} scope global || :" >> $DEBIAN_CONFIGFILE
+		echo >> $DEBIAN_CONFIGFILE
 	fi
 
 	if [ "x$PROTO6" == "xyes" ] ; then
