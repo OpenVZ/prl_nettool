@@ -8,7 +8,6 @@
 prog="$0"
 path="${prog%/*}"
 funcs="$path/functions"
-CONFIGFILE="/etc/network/interfaces"
 
 if [ -f "$funcs" ] ; then
 	. $funcs
@@ -61,7 +60,7 @@ function restart()
 
 
 function restart_nm() {
-	type nmctl > /dev/null 2>&1
+	type nmcli > /dev/null 2>&1
 	if [ $? -eq 0 -a $# -ne 0 ]; then
 		nmcli device disconnect $1 &&
 			nmcli device connect $1 &&

@@ -28,8 +28,6 @@ ETH_MAC=$3
 ETH_MAC_NW=`echo $ETH_MAC | sed "s,00,0,g"`
 
 if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
-	CONFIGFILE="/etc/network/interfaces"
-
 	for gw in ${ETH_GATEWAY}; do
 		inet="inet"
 
@@ -66,7 +64,8 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 		cmd="$cmd"'
 			{ print }'
 
-		awk "${cmd}" < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
+		awk "${cmd}" < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
+			mv -f ${DEBIAN_CONFIGFILE}.$$ ${DEBIAN_CONFIGFILE}
 	done
 
 	$path/debian-restart.sh ${ETH_DEV}

@@ -14,7 +14,6 @@
 prog="$0"
 path="${prog%/*}"
 funcs="$path/functions"
-CONFIGFILE="/etc/network/interfaces"
 
 if [ -f "$funcs" ] ; then
 	. $funcs
@@ -54,13 +53,13 @@ function print_ipv6_header()
 	local method=$2
 	if [ "${SET_AUTO[0]}" != "yes" ] ; then
 		SET_AUTO[0]="yes"
-		echo "auto ${device}" >> $CONFIGFILE
+		echo "auto ${device}" >> $DEBIAN_CONFIGFILE
 	fi
 
-	echo "iface ${device} inet6 ${method}" >> $CONFIGFILE
+	echo "iface ${device} inet6 ${method}" >> $DEBIAN_CONFIGFILE
 
 	# 2.6.35 kernel doesn't flush IPv6 addresses
-	echo "	pre-down ip -6 addr flush dev ${device} scope global || :" >> $CONFIGFILE
+	echo "	pre-down ip -6 addr flush dev ${device} scope global || :" >> $DEBIAN_CONFIGFILE
 }
 
 function add_ip6()
@@ -82,8 +81,8 @@ function add_ip6()
 	if [ "x${IFNUM6}" == "x0" ] ; then
 		print_ipv6_header ${device} static
 
-		echo "	address ${ip}" >> $CONFIGFILE
-		echo "	netmask ${mask}" >> $CONFIGFILE
+		echo "	address ${ip}" >> $DEBIAN_CONFIGFILE
+		echo "	netmask ${mask}" >> $DEBIAN_CONFIGFILE
 	else
 		awk 'BEGIN {found = 0}
 		NF == 0 {next}
@@ -102,11 +101,12 @@ function add_ip6()
 				print "\tup ip addr add '${ip}'/'${mask}' dev '${device}'";
 			}
 		}
-		' < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
+		' < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
+			mv -f ${DEBIAN_CONFIGFILE}.$$ ${DEBIAN_CONFIGFILE}
 	fi
 	
-	echo >> $CONFIGFILE
-	echo >> $CONFIGFILE
+	echo >> $DEBIAN_CONFIGFILE
+	echo >> $DEBIAN_CONFIGFILE
 }
 
 function create_config()
@@ -128,20 +128,20 @@ function create_config()
 
 	if [ "${SET_AUTO[${ifnum}]}" != "yes" ] ; then
 		SET_AUTO[${ifnum}]="yes"
-		echo "auto ${device}${ifnum_postfix}" >> $CONFIGFILE
+		echo "auto ${device}${ifnum_postfix}" >> $DEBIAN_CONFIGFILE
 	fi
 
 	if [ "${ip}" == "remove" ] ; then
-		echo "" >> $CONFIGFILE
+		echo "" >> $DEBIAN_CONFIGFILE
 		return
 	fi
 
-	echo "iface ${device}${ifnum_postfix} ${inet} static" >> $CONFIGFILE
+	echo "iface ${device}${ifnum_postfix} ${inet} static" >> $DEBIAN_CONFIGFILE
 
 	echo "	address ${ip}
-	netmask ${mask}" >> $CONFIGFILE
+	netmask ${mask}" >> $DEBIAN_CONFIGFILE
 	echo "	broadcast +
-" >> $CONFIGFILE
+" >> $DEBIAN_CONFIGFILE
 }
 
 function set_ip()
@@ -149,8 +149,8 @@ function set_ip()
 	local ip_mask ip mask
 	local new_ips
 
-	remove_debian_interface ${ETH_DEV} $CONFIGFILE
-	remove_debian_interface "${ETH_DEV}:[0-9]+" $CONFIGFILE
+	remove_debian_interfaces ${ETH_DEV}
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
 
 	new_ips="${IP_MASKS}"
 	for ip_mask in ${new_ips}; do
@@ -181,7 +181,7 @@ function set_ip()
 		if [ $USE_DHCPV4 -eq 1 ] ; then
 			echo "
 iface ${ETH_DEV} inet dhcp
-" >> $CONFIGFILE
+" >> $DEBIAN_CONFIGFILE
 		fi
 	fi
 
@@ -252,13 +252,7 @@ function set_ip_nm() {
 	local ip_mask ip mask
 	local new_ips
 
-	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		for i in $NWSYSTEMCONNECTIONS/*; do
-			cat "$i" | grep -E "$ETH_MAC|$ETH_MAC_NW" >/dev/null 2>&1
-			[ $? -eq 0 ] && rm -f "$i"
-		done
-	fi
+	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
 
 	if [ ! -f "${NWMANAGER}" ] ; then
 		echo "Network manager ${NWMANAGER} not found"
@@ -327,8 +321,10 @@ mtu=0" >> $NWSYSTEMCONNECTIONS/${ETH_DEV}
 
 	chmod 0600 $NWSYSTEMCONNECTIONS/${ETH_DEV}
 
-	remove_debian_interface ${ETH_DEV} $CONFIGFILE
-	remove_debian_interface "${ETH_DEV}:[0-9]+" $CONFIGFILE
+	remove_debian_interfaces ${ETH_DEV}
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+
+	nm_connection_reload ${ETH_DEV}
 }
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then

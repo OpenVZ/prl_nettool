@@ -38,13 +38,7 @@ done
 
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		for i in $NWSYSTEMCONNECTIONS/*; do
-			cat "$i" | grep -E "$ETH_MAC|$ETH_MAC_NW" >/dev/null 2>&1
-			[ $? -eq 0 ] && rm -f "$i"
-		done
-	fi
+	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
 
 	if [ ! -f "${NWMANAGER}" ] ; then
 		echo "Network manager ${NWMANAGER} not found"
@@ -89,25 +83,23 @@ mtu=0" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
 
 	chmod 0600 $NWSYSTEMCONNECTIONS/$ETH_DEV
 
-	remove_debian_interface ${ETH_DEV} $CONFIGFILE
-	remove_debian_interface "${ETH_DEV}:[0-9]+" $CONFIGFILE
+	remove_debian_interfaces ${ETH_DEV}
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+
+	nm_connection_reload ${ETH_DEV}
 else
-	CONFIGFILE="/etc/network/interfaces"
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+	remove_debian_interfaces ${ETH_DEV}
 
-	remove_debian_interface "${ETH_DEV}:[0-9]+" ${CONFIGFILE}
-	remove_debian_interface ${ETH_DEV} ${CONFIGFILE}
-
-	echo "allow-hotplug ${ETH_DEV}" >> $CONFIGFILE
-	echo "auto ${ETH_DEV}" >> $CONFIGFILE
+	echo "allow-hotplug ${ETH_DEV}" >> $DEBIAN_CONFIGFILE
+	echo "auto ${ETH_DEV}" >> $DEBIAN_CONFIGFILE
 
 	if [ "x$PROTO4" == "xyes" ] ; then
-		#clean old IPv4
-		ip -4 addr flush dev ${ETH_DEV}
-		echo >> $CONFIGFILE
-		echo "iface ${ETH_DEV} inet dhcp" >> $CONFIGFILE
+		echo >> $DEBIAN_CONFIGFILE
+		echo "iface ${ETH_DEV} inet dhcp" >> $DEBIAN_CONFIGFILE
 		# 2.6.35 kernel doesn't flush IPv6 addresses
-		echo "	pre-down ip -6 addr flush dev ${ETH_DEV} scope global || :" >> $CONFIGFILE
-		echo >> $CONFIGFILE
+		echo "	pre-down ip -6 addr flush dev ${ETH_DEV} scope global || :" >> $DEBIAN_CONFIGFILE
+		echo >> $DEBIAN_CONFIGFILE
 	fi
 
 	if [ "x$PROTO6" == "xyes" ] ; then
@@ -115,6 +107,11 @@ else
 		set_wide_dhcpv6 ${ETH_DEV}
 	fi
 
+fi
+
+if [ "x$PROTO4" == "xyes" ] ; then
+	#clean old IPv4
+	ip -4 addr flush dev ${ETH_DEV}
 fi
 
 $path/debian-restart.sh ${ETH_DEV}

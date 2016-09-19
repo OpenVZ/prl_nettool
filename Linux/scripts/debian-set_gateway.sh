@@ -55,11 +55,9 @@ if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
 		done
 	done
 
-	remove_debian_interface ${ETH_DEV} $CONFIGFILE
-	remove_debian_interface "${ETH_DEV}:[0-9]+" $CONFIGFILE
+	remove_debian_interfaces ${ETH_DEV}
+	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
 else
-	CONFIGFILE="/etc/network/interfaces"
-
 	for gw in ${ETH_GATEWAY}; do
 		inet="inet"
 
@@ -86,7 +84,8 @@ else
 				addgw=0
 			}
 			{ print }
-		' < ${CONFIGFILE} > ${CONFIGFILE}.$$ && mv -f ${CONFIGFILE}.$$ ${CONFIGFILE}
+		' < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
+			mv -f ${DEBIAN_CONFIGFILE}.$$ ${DEBIAN_CONFIGFILE}
 	done
 
 fi
