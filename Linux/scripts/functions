@@ -298,7 +298,8 @@ function remove_debian_interface()
 {
 	local dev="$1"
 	local cfg="$2"
-	
+	local ret=0
+
 	${CP} ${cfg} ${cfg}.$$ || \
 		error "Can't copy file ${cfg}" $VZ_FS_NO_DISK_SPACE
 
@@ -311,18 +312,27 @@ function remove_debian_interface()
 		{skip = 0; print}
 	' < ${cfg} > ${cfg}.$$ && mv -f ${cfg}.$$ ${cfg}
 
+	diff -q ${cfg}.$$ ${cfg} > /dev/null 2>&1
+	ret=$?
+
 	rm -f ${cfg}.$$ 2>/dev/null
+
+	return $ret
 }
 
 function remove_debian_interfaces()
 {
 	local dev="$1"
 	local cf
+	local ret=0
 
 	for cf in $DEBIAN_CONFIGFILES; do
 		[ ! -f $cf ] && continue
 		remove_debian_interface $dev $cf
+		[ $ret -eq 0 ] && ret=$?
 	done
+
+	return $ret
 }
 
 function change_hostname()
@@ -802,9 +812,19 @@ clean_nm_connections()
 	local nmdev=""
 	local need_restart=0
 
+	if [ -d $NWCONFDIR ]; then
+		echo "
+[main]
+no-auto-default+=$2
+plugins-=ifupdown
+" > $NWCONFDIR/prl_nettool_$1.conf
+		need_restart=1
+	fi
+
 	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
 	if [ $? -eq 0 ]; then
 		for i in $NWSYSTEMCONNECTIONS/*; do
+			echo $i | grep "Wired connection" >/dev/null 2>&1 && rm -f "$i" && need_restart=1 && continue
 			cat "$i" | grep -E "$mac|$macnw" >/dev/null 2>&1
 			[ $? -eq 0 ] && rm -f "$i" && continue
 			type nmcli > /dev/null 2>&1 || continue
@@ -814,7 +834,7 @@ clean_nm_connections()
 		done
 	fi
 
-	[ $need_restart -eq 1 ] && $NWMANAGER restart > /dev/null 2>&1
+	[ $need_restart -eq 1 ] && $NWMANAGER restart > /dev/null 2>&1 && /usr/bin/nm-online -t 30 >/dev/null 2>&1
 }
 
 nm_connection_reload()

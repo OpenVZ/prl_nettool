@@ -38,12 +38,20 @@ done
 
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
-
 	if [ ! -f "${NWMANAGER}" ] ; then
 		echo "Network manager ${NWMANAGER} not found"
 		exit 3
 	fi
+
+	ret=0
+	for dev in ${ETH_DEV} "${ETH_DEV}:[0-9]+"; do
+		remove_debian_interfaces $dev
+		[ $ret -eq 0 ] && ret=$?
+	done
+
+	[ $ret -ne 0 ] && $NWMANAGER restart > /dev/null 2>&1 && /usr/bin/nm-online -t 30 >/dev/null 2>&1
+
+	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
 
 	echo "[connection]
 id=$ETH_DEV
@@ -82,9 +90,6 @@ mac-address=$ETH_MAC_NW
 mtu=0" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
 
 	chmod 0600 $NWSYSTEMCONNECTIONS/$ETH_DEV
-
-	remove_debian_interfaces ${ETH_DEV}
-	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
 
 	nm_connection_reload ${ETH_DEV}
 else
