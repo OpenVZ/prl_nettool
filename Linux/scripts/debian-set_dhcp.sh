@@ -49,7 +49,7 @@ if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
 		[ $ret -eq 0 ] && ret=$?
 	done
 
-	[ $ret -ne 0 ] && $NWMANAGER restart > /dev/null 2>&1 && /usr/bin/nm-online -t 30 >/dev/null 2>&1
+	[ $ret -ne 0 ] && restart_nm_wait
 
 	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
 

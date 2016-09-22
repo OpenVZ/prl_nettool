@@ -310,7 +310,7 @@ function remove_debian_interface()
 		$1 == "iface" && $2 ~/'${dev}'$/ {skip = 1; next}
 		/^\t/ && skip {next}
 		{skip = 0; print}
-	' < ${cfg} > ${cfg}.$$ && mv -f ${cfg}.$$ ${cfg}
+	' < ${cfg} > ${cfg}.$$ && cp -f ${cfg}.$$ ${cfg}
 
 	diff -q ${cfg}.$$ ${cfg} > /dev/null 2>&1
 	ret=$?
@@ -804,6 +804,14 @@ call_nmcli()
 	return $res
 }
 
+restart_nm_wait()
+{
+	killall -9 NetworkManager > /dev/null 2>&1
+	/usr/bin/nm-online -t 30 >/dev/null 2>&1
+	# For case if it was stopped
+	$NWMANAGER restart > /dev/null 2>&1
+}
+
 clean_nm_connections()
 {
 	local dev=$1
@@ -818,7 +826,7 @@ clean_nm_connections()
 no-auto-default+=$2
 plugins-=ifupdown
 " > $NWCONFDIR/prl_nettool_$1.conf
-		need_restart=1
+		[ ! -f $NWCONFDIR/prl_nettool_$1.conf ] && need_restart=1
 	fi
 
 	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
@@ -834,7 +842,7 @@ plugins-=ifupdown
 		done
 	fi
 
-	[ $need_restart -eq 1 ] && $NWMANAGER restart > /dev/null 2>&1 && /usr/bin/nm-online -t 30 >/dev/null 2>&1
+	[ $need_restart -eq 1 ] && restart_nm_wait
 }
 
 nm_connection_reload()
