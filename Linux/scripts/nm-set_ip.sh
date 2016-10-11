@@ -104,9 +104,14 @@ function set_ip()
 		new_ips="${new_ips} ${ip_mask}"
 	done
 
-	call_nmcli c modify $uuid ipv4.method auto ||
+	DHCP4_METHOD="manual"
+	[ $USE_DHCPV4 -eq 1 ] && DHCP4_METHOD="auto"
+	DHCP6_METHOD="manual"
+	[ $USE_DHCPV6 -eq 1 ] && DHCP6_METHOD="auto"
+
+	call_nmcli c modify $uuid ipv4.method $DHCP4_METHOD ||
 		return $?
-	call_nmcli c modify $uuid ipv6.method auto ||
+	call_nmcli c modify $uuid ipv6.method $DHCP6_METHOD ||
 		return $?
 
 	for ip_mask in ${new_ips}; do
@@ -136,9 +141,6 @@ function set_ip()
 			call_nmcli c modify $uuid ipv4.method link-local ||
 				return $?
 		fi
-	else
-		call_nmcli c modify $uuid ipv4.method manual ||
-			return $?
 	fi
 
 	if [ $IP6_COUNT -eq 0 ]; then
@@ -147,9 +149,6 @@ function set_ip()
 			call_nmcli c modify $uuid ipv6.method ignore ||
 				return $?
 		fi
-	else
-		call_nmcli c modify $uuid ipv6.method manual ||
-			return $?
 	fi
 
 	call_nmcli c up $uuid || return $?
