@@ -104,15 +104,18 @@ function set_ip()
 		new_ips="${new_ips} ${ip_mask}"
 	done
 
-	DHCP4_METHOD="manual"
-	[ $USE_DHCPV4 -eq 1 ] && DHCP4_METHOD="auto"
-	DHCP6_METHOD="manual"
-	[ $USE_DHCPV6 -eq 1 ] && DHCP6_METHOD="auto"
-
-	call_nmcli c modify $uuid ipv4.method $DHCP4_METHOD ||
-		return $?
-	call_nmcli c modify $uuid ipv6.method $DHCP6_METHOD ||
-		return $?
+	if [ $USE_DHCPV4 -eq 1 ]; then
+		call_nmcli c modify $uuid ipv4.method auto ||
+			return $?
+	else
+		IPV4_MANUAL="ipv4.method manual"
+	fi
+	if [ $USE_DHCPV6 -eq 1 ]; then
+		call_nmcli c modify $uuid ipv6.method auto ||
+			return $?
+	else
+		IPV6_MANUAL="ipv6.method manual"
+	fi
 
 	for ip_mask in ${new_ips}; do
 		if ! is_ipv6 ${ip_mask}; then
@@ -124,12 +127,12 @@ function set_ip()
 			ip=${ip_mask%%/*}
 
 			if [ "$mask" -ge 0 ]; then
-				call_nmcli c modify $uuid ${plusv4}ipv4.address $ip/$mask
+				call_nmcli c modify $uuid ${plusv4}ipv4.address $ip/$mask $IPV4_MANUAL
 				[ $? -ne 0 ] && errors=$((errors + 1))
 				plusv4="+"
 			fi
 		else
-			call_nmcli c modify $uuid ${plusv6}ipv6.address $ip_mask
+			call_nmcli c modify $uuid ${plusv6}ipv6.address $ip_mask $IPV6_MANUAL
 			[ $? -ne 0 ] && errors=$((errors + 1))
 			plusv6="+"
 		fi
