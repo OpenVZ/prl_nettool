@@ -1,4 +1,5 @@
 ### Compiler flags
+# make CC=x86_64-w64-mingw32-gcc WINVER=-D_WIN32_WINNT=0x0600 TARGET=prl_nettool_vista.exe clean all -f Makefile.Windows
 VERSION=$(shell cat Makefile.version)
 CC32 = i686-w64-mingw32-gcc
 CC64 = x86_64-w64-mingw32-gcc

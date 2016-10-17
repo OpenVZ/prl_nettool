@@ -975,11 +975,7 @@ static int enable_adapter_by_name(const char *name, int enable)
 	sprintf(str, "interface set interface \"%s\" %s", name, enable ? "ENABLE" : "DISABLE");
 	rc = exec_netsh(str);
 
-	if (enable //save enabled
-		&& (rc == 0 || rc == 1)) //during windows shutdown (#PSBM-9930)
-								//netsh return STATUS_DLL_INIT_FAILED
-								//in such case we should not clean registry key
-								//allow only success or param error
+	if (enable && rc == 0) //save only if successfully enabled
 		save_adapter_disabled(name, 1);
 
 	return 0;
