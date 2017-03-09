@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) Parallels, 1999-2011. All rights reserved.
+# Copyright (c) 1999-2017, Parallels International GmbH
 #
 # This script configure routes inside RedHat like VM.
 #

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) Parallels, 1999-2009. All rights reserved.
+# Copyright (c) 1999-2017, Parallels International GmbH
 #
 # This script configure gateway inside RedHat like VM.
 #
