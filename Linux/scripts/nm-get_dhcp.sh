@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) Parallels, 1999-2010. All rights reserved.
+# Copyright (c) 1999-2017, Parallels International GmbH
 #
 # This script detect is DHCP enabled for RedHat like VMs.
 #

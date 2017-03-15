@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2015 Parallels IP Holdings GmbH
+# Copyright (c) 2015-2017, Parallels International GmbH
 #
 # This script configure adapter to use DHCP inside SuSE like VM.
 #
