@@ -663,11 +663,11 @@ int do_work()
 	r = CMP_WaitNoPendingInstallEvents(SCM_TIMEOUT);
 	debug("wait for PNP completed: %d", (int)r);
 
-#if (NTDDI_VERSION < NTDDI_LONGHORN)
+//#if (NTDDI_VERSION < NTDDI_LONGHORN)
 	//on win2k3 prl_nettool disable/enable adapter in apply_parameters().
 	//first - restore adapters #PSBM-9930
 	restore_adapter_state();
-#endif
+//#endif
 	//#PSBM-9930 and #PSBM-35109
 	//sometimes initial pnp configuration of network adapters takes much time
 	//we need to wait at least for GetAdaptersInfo() to be successfull
