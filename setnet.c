@@ -1005,7 +1005,7 @@ int restore_adapter_state()
 	it = adapters;
 	while(it) {
 		found = 1;
-		//error(0, "Restore '%s'", it->name );
+		error(0, "Restore '%s'", it->name );
 		enable_adapter_by_name(it->name, 1);
 		it = it->next;
 	}
