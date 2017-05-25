@@ -320,14 +320,7 @@ static struct netinfo *put_linkinfo(struct nlmsghdr *n,
 	return if_info;
 }
 
-static int dump_filter(struct rtnl_handle *rth, rtnl_filter_t filter, void *arg)
-{
-#ifdef RTNL_HANDLE_F_LISTEN_ALL_NSID
-	return rtnl_dump_filter(rth, filter, arg);
-#else
-	return rtnl_dump_filter(rth, filter, arg, NULL, NULL);
-#endif
-}
+
 
 static int read_ifconfioctl(struct netinfo **netinfo_head)
 {
@@ -349,7 +342,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out;
 	}
 
-	ret = dump_filter(&rth, store_nlmsg, &linfo);
+	ret = rtnl_dump_filter(&rth, store_nlmsg, &linfo);
 	if (ret < 0) {
 		werror("Dump terminated");
 		goto out;
@@ -362,7 +355,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out2;
 	}
 
-	ret = dump_filter(&rth, store_nlmsg, &ipinfo);
+	ret = rtnl_dump_filter(&rth, store_nlmsg, &ipinfo);
 	if (ret < 0) {
 		werror("Dump terminated");
 		goto out2;
@@ -374,7 +367,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out2;
 	}
 
-	ret = dump_filter(&rth, store_nlmsg, &rinfo);
+	ret = rtnl_dump_filter(&rth, store_nlmsg, &rinfo);
 	if (ret < 0) {
 		werror("Dump terminated");
 		goto out2;
@@ -387,7 +380,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out2;
 	}
 
-	ret = dump_filter(&rth, store_nlmsg, &ip6info);
+	ret = rtnl_dump_filter(&rth, store_nlmsg, &ip6info);
 	if (ret < 0) {
 		werror("Dump terminated");
 		goto out2;
@@ -400,7 +393,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out2;
 	}
 
-	ret = dump_filter(&rth, store_nlmsg, &r6info);
+	ret = rtnl_dump_filter(&rth, store_nlmsg, &r6info);
 	if (ret < 0) {
 		werror("Dump terminated");
 		goto out2;
