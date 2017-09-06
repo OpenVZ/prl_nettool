@@ -45,19 +45,31 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 				/^\t'"$f"'/ {print; next; }'
 		done
 
+
+		if [ which route >/dev/null 2>&1 ]
+		then
+			route="route -A"
+			add="add"
+			via="gw"
+		else
+			route="ip -f"
+			add="route add"
+			via="via"
+		fi
+
 		if [ "${gw}" == "remove" -o "${gw}" == "removev6" ] ; then
 			cmd="$cmd"'
-				/^\tup route -A '${inet}' add .* dev '${ETH_DEV}'/ { next; }'
+				/^\tup '${route}' '${inet}' '${add}' .* dev '${ETH_DEV}'/ { next; }'
 		else
 			ip=$(route_ip $gw)
 			hop=$(route_gw $gw)
-			[ -n "$hop" ] && hop="gw $hop"
+			[ -n "$hop" ] && hop="$via $hop"
 			metric=$(route_metric $gw)
 			[ -n "$metric" ] && metric="metric $metric"
 			cmd="$cmd"'
 				$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
 				addgw {
-					print "\tup route -A '${inet}' add '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
+					print "\tup '${route}' '${inet}' '${add}' '${ip}' '"${hop}"' dev '${ETH_DEV}' '"${metric}"'";
 					addgw=0
 				}'
 		fi
