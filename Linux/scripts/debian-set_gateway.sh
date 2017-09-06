@@ -68,10 +68,21 @@ else
 		if is_ipv6 ${gw}; then
 			inet="inet6"
 		fi
+
+		if [ which route >/dev/null 2>&1 ]
+		then
+			route="route -A"
+			add="add"
+			via="gw"
+		else
+			route="ip -f"
+			add="route add"
+			via="via"
+		fi
 		
 		awk '
-			/^\tup route -A '${inet}' add .* dev '${ETH_DEV}'/ { next; }
-			/^\tup route -A '${inet}' add default/ { next; }
+			/^\tup '${route}' '${inet}' '${add}' .* dev '${ETH_DEV}'/ { next; }
+			/^\tup '${route}' '${inet}' '${add}' default/ { next; }
 			/^\taddress/ { print; next; }
 			/^\tnetmask/ { print; next; } 
 			/^\tpre-down/ { print; next; } 
@@ -79,8 +90,8 @@ else
 			/^\tbroadcast/ { print; next; }
 			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
 			addgw { 
-				print "\tup route -A '${inet}' add '${gw}' dev '${ETH_DEV}'";
-				print "\tup route -A '${inet}' add default gw '${gw}' dev '${ETH_DEV}'";
+				print "\tup '${route}' '${inet}' '${add}' '${gw}' dev '${ETH_DEV}'";
+				print "\tup '${route}' '${inet}' '${add}' default '${via}' '${gw}' dev '${ETH_DEV}'";
 				addgw=0
 			}
 			{ print }
