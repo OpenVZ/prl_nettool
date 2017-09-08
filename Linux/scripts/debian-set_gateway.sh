@@ -69,7 +69,7 @@ else
 			inet="inet6"
 		fi
 
-		if [ which route >/dev/null 2>&1 ]
+		if which route >/dev/null 2>&1
 		then
 			route="route -A"
 			add="add"
@@ -80,22 +80,22 @@ else
 			via="via"
 		fi
 		
-		awk '
-			/^\tup '${route}' '${inet}' '${add}' .* dev '${ETH_DEV}'/ { next; }
-			/^\tup '${route}' '${inet}' '${add}' default/ { next; }
-			/^\taddress/ { print; next; }
-			/^\tnetmask/ { print; next; } 
-			/^\tpre-down/ { print; next; } 
-			/^\tup ip/ { print; next; } 
-			/^\tbroadcast/ { print; next; }
-			$1 == "iface" && $2 ~/'${ETH_DEV}'$/ && $3 == "'${inet}'" { addgw=1; print; next; }
+		awk "
+			/^\\tup ${route} ${inet} ${add} .* dev ${ETH_DEV}/ { next; }
+			/^\\tup ${route} ${inet} ${add} default/ { next; }
+			/^\\taddress/ { print; next; }
+			/^\\tnetmask/ { print; next; } 
+			/^\\tpre-down/ { print; next; } 
+			/^\\tup ip/ { print; next; } 
+			/^\\tbroadcast/ { print; next; }
+			\$1 == \"iface\" && \$2 ~/${ETH_DEV}\$/ && \$3 == \"${inet}\" { addgw=1; print; next; }
 			addgw { 
-				print "\tup '${route}' '${inet}' '${add}' '${gw}' dev '${ETH_DEV}'";
-				print "\tup '${route}' '${inet}' '${add}' default '${via}' '${gw}' dev '${ETH_DEV}'";
+				print \"\\tup ${route} ${inet} ${add} ${gw} dev ${ETH_DEV}\";
+				print \"\\tup ${route} ${inet} ${add} default ${via} ${gw} dev ${ETH_DEV}\";
 				addgw=0
 			}
 			{ print }
-		' < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
+		" < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
 			mv -f ${DEBIAN_CONFIGFILE}.$$ ${DEBIAN_CONFIGFILE}
 	done
 

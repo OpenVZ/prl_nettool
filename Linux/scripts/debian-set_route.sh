@@ -46,7 +46,7 @@ if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
 		done
 
 
-		if [ which route >/dev/null 2>&1 ]
+		if which route >/dev/null 2>&1
 		then
 			route="route -A"
 			add="add"
