@@ -237,6 +237,8 @@ int read_ifconf(struct netinfo **netinfo_head)
 			return ERROR_NOT_ENOUGH_MEMORY;
 		}
 
+		if_it->idx = pAdapter->Index;
+
 		if (mac_to_str(pAdapter->Address, pAdapter->AddressLength,
 			       buf, MAC_LENGTH+1) == NULL) {
 			netinfo_free(if_it);
@@ -398,6 +400,7 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 			}
 			need_list_add = TRUE;
 			strcpy(if_it->mac, mac_buf);
+			if_it->idx = pCurrAddresses->IfIndex;
 		}
 
 		if (pCurrAddresses->Flags & IP_ADAPTER_DHCP_ENABLED)

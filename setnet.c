@@ -116,7 +116,7 @@ int remove_ipv6_ips(struct netinfo *if_it)
 
 		if (split_ip_mask(ip_mask->name, ip, mask) < 0)
 					return -1;
-		sprintf(str, "interface ipv6 del address \"%s\" %s", if_it->name, ip);
+		sprintf(str, "interface ipv6 del address %d %s", if_it->idx, ip);
 		if ((rc = exec_netsh(str)))
 					return -1;
 
@@ -182,7 +182,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 			if (first_ipv4)
 			{
 
-				sprintf(str, "interface ip set address \"%s\" static %s %s", if_it->name, ip, mask);
+				sprintf(str, "interface ip set address %d static %s %s", if_it->idx, ip, mask);
 				if ((rc = exec_netsh(str)))
 					return -1;
 				if_it->configured_with_dhcp = 0;
@@ -190,7 +190,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 			}
 			else
 			{
-				sprintf(str, "interface ip add address \"%s\" %s %s", if_it->name, ip, mask);
+				sprintf(str, "interface ip add address %d %s %s", if_it->idx, ip, mask);
 				rc = exec_netsh(str);
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
 				//on win2k3 during set second ip on disabled adapter - netsh return error without any
@@ -210,7 +210,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 
 				if (split_ip_mask(ip_mask->name, ip, mask) < 0)
 					return -1;
-				sprintf(str, "interface ipv6 set address \"%s\" %s/%s", if_it->name, ip, mask);
+				sprintf(str, "interface ipv6 set address %d %s/%s", if_it->idx, ip, mask);
 				if ((rc = exec_netsh(str)))
 					return -1;
 				if_it->configured_with_dhcpv6 = 0;
@@ -220,7 +220,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 			{
 				if (split_ip_mask(ip_mask->name, ip, mask) < 0)
 					return -1;
-				sprintf(str, "interface ipv6 add address \"%s\" %s/%s", if_it->name, ip, mask);
+				sprintf(str, "interface ipv6 add address %d %s/%s", if_it->idx, ip, mask);
 				if ((rc = exec_netsh(str)))
 					return -1;
 			}
@@ -233,7 +233,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 			&& first_ipv6 /*ipv6 IPs are not specified*/)
 	{
 		//remove all ipv6 configuration
-		sprintf(str, "interface ipv6 set dns \"%s\" dhcp", if_it->name);
+		sprintf(str, "interface ipv6 set dns %d dhcp", if_it->idx);
 		exec_netsh(str);
 
 		//remove all IPs except of local-link
@@ -246,7 +246,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 		  (mac_it == NULL || mac_it->value == NULL || strchr(mac_it->value, '4') == NULL)) )
 	{
 		//remove all ipv4 configuration
-		sprintf(str, "interface ip set address \"%s\" dhcp", if_it->name);
+		sprintf(str, "interface ip set address %d dhcp", if_it->idx);
 		exec_netsh(str);
 	}
 
@@ -283,7 +283,7 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 		{
 			if (!clear_ipv4)
 			{
-				sprintf(str, "interface ip set dns \"%s\" static none", if_it->name);
+				sprintf(str, "interface ip set dns %d static none", if_it->idx);
 				clear_ipv4 = 1;
 				if ((rc = exec_netsh(str)) < 0)
 					return rc;
@@ -293,7 +293,7 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 		{
 			if (!clear_ipv6)
 			{
-				sprintf(str, "interface ipv6 set dns \"%s\" static none", if_it->name);
+				sprintf(str, "interface ipv6 set dns %d static none", if_it->idx);
 				clear_ipv6 = 1;
 				if ((rc = exec_netsh(str)) < 0)
 					return rc;
@@ -301,11 +301,9 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 		}
 
 		if (!is_ipv6(ip->name))
-			sprintf(str, "interface ip add dns name=\"%s\" addr=%s",
-										if_it->name, ip->name);
+			sprintf(str, "interface ip add dns %d addr=%s", if_it->idx, ip->name);
 		else
-			sprintf(str, "interface ipv6 add dns name=\"%s\" addr=%s",
-										if_it->name, ip->name);
+			sprintf(str, "interface ipv6 add dns %d addr=%s", if_it->idx, ip->name);
 		if ((rc = exec_netsh(str))< 0)
 			return rc;
 
@@ -336,12 +334,12 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 	{
 		if (is_ipv6(gw->name) ||
 				!strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6)))
-			sprintf(str, "interface ipv6 del route ::/0 \"%s\"", if_it->name);
+			sprintf(str, "interface ipv6 del route ::/0 %d", if_it->idx);
 		else
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
-			sprintf(str, "interface ip del address \"%s\" gateway=all", if_it->name);
+			sprintf(str, "interface ip del address %d gateway=all", if_it->idx);
 #else
-			sprintf(str, "interface ip del route 0.0.0.0/0 \"%s\"", if_it->name);
+			sprintf(str, "interface ip del route 0.0.0.0/0 %d", if_it->idx);
 #endif
 		exec_netsh(str);
 
@@ -349,11 +347,11 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 			strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE)) &&
 			strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
 			if (is_ipv6(gw->name))
-				sprintf(str, "interface ipv6 add route ::/0 \"%s\" %s store=persistent",
-							if_it->name, gw->name);
+				sprintf(str, "interface ipv6 add route ::/0 %d %s store=persistent",
+							if_it->idx, gw->name);
 			else
-				sprintf(str, "interface ip add address \"%s\" gateway=%s gwmetric=1",
-							if_it->name, gw->name);
+				sprintf(str, "interface ip add address %d gateway=%s gwmetric=1",
+							if_it->idx, gw->name);
 			exec_netsh(str);
 		}
 
@@ -657,10 +655,10 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 			//switch to dynamic
 			char str[1024];
 
-			sprintf(str, "interface ip set dns \"%s\" dhcp", if_it->name);
+			sprintf(str, "interface ip set dns %d dhcp", if_it->idx);
 			if ((rc = exec_netsh(str)))
 				return rc;
-			sprintf(str, "interface ip set address \"%s\" dhcp", if_it->name);
+			sprintf(str, "interface ip set address %d dhcp", if_it->idx);
 			if ((rc = exec_netsh(str)))
 				return rc;
 
@@ -679,7 +677,7 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 			//switch to dynamic
 			char str[1024];
 
-			sprintf(str, "interface ipv6 set dns \"%s\" dhcp", if_it->name);
+			sprintf(str, "interface ipv6 set dns %d dhcp", if_it->idx);
 			if ((rc = exec_netsh(str)))
 				return rc;
 
@@ -876,9 +874,9 @@ static int remove_route_vista(struct netinfo *if_it, const char *family)
 		//for (i=0; i < _countof(param); ++i)
 		//	printf("i=%d [%s]\n", i, param[i]);
 
-		if (!_stricmp(if_it->name, param[5])) {
-				sprintf(cmd, "interface %s delete route %s \"%s\" store=persistent",
-					family, param[3], if_it->name);
+		if (if_it->idx == atoi(param[4])) {
+				sprintf(cmd, "interface %s delete route %s %d store=persistent",
+					family, param[3], if_it->idx);
 				exec_netsh(cmd);
 		}
 	}
@@ -923,8 +921,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 			parse_route(gw->name, &route);
 			if (is_ipv6(gw->name)) {
 
-				sprintf(str, "interface ipv6 add route %s%s \"%s\" %s %s%s store=persistent",
-					route.ip, strchr(route.ip, '/') ? "" : "/128", if_it->name,
+				sprintf(str, "interface ipv6 add route %s%s %d %s %s%s store=persistent",
+					route.ip, strchr(route.ip, '/') ? "" : "/128", if_it->idx,
 					route.gw ? route.gw : "", route.metric ? "metric=" : "",
 					route.metric ? route.metric : "");
 				rc = exec_netsh(str);
@@ -941,8 +939,8 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 						route.metric ? "metric" : "", route.metric ? route.metric : "");
 				rc = exec_cmd(str);
 #else
-				sprintf(str, "interface ipv4 add route %s%s \"%s\" %s %s%s store=persistent",
-					route.ip, strchr(route.ip, '/') ? "" : "/32", if_it->name,
+				sprintf(str, "interface ipv4 add route %s%s %d %s %s%s store=persistent",
+					route.ip, strchr(route.ip, '/') ? "" : "/32", if_it->idx,
 					route.gw ? route.gw : "", route.metric ? "metric=" : "",
 					route.metric ? route.metric : "");
 				rc = exec_netsh(str);
@@ -953,7 +951,6 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 
 		gw = gw->next;
 	}
-
 	rc = 0;
 	return rc;
 }
@@ -964,26 +961,28 @@ int clean(struct netinfo *if_it)
 	return 0;
 }
 
-static int enable_adapter_by_name(const char *name, int enable)
+static int enable_adapter_index(const char *idx, int enable)
 {
 	char str[1024];
 	int rc = 0;
 
 	if (!enable) //save disabled
-		save_adapter_disabled(name, 0);
+		save_adapter_disabled(idx, 0);
 
-	sprintf(str, "interface set interface \"%s\" %s", name, enable ? "ENABLE" : "DISABLE");
+	sprintf(str, "interface set interface \"%s\" %s", idx, enable ? "ENABLE" : "DISABLE");
 	rc = exec_netsh(str);
 
 	if (enable && rc == 0) //save only if successfully enabled
-		save_adapter_disabled(name, 1);
+		save_adapter_disabled(idx, 1);
 
 	return 0;
 }
 
 int enable_adapter(struct netinfo *if_it, int enable)
 {
-	return enable_adapter_by_name(if_it->name, enable);
+	char idx[32];
+	sprintf(idx, "%d", if_it->idx);
+	return enable_adapter_index(idx, enable);
 }
 
 int restore_adapter_state()
@@ -1006,7 +1005,7 @@ int restore_adapter_state()
 	while(it) {
 		found = 1;
 		error(0, "Restore '%s'", it->name );
-		enable_adapter_by_name(it->name, 1);
+		enable_adapter_index(it->name, 1);
 		it = it->next;
 	}
 
@@ -1090,12 +1089,10 @@ int enable_disabled_adapter(const char *mac)
 			//convert wchar to char
 			snprintf(uuid, sizeof(uuid), "%wS", uuid_start);
 
-			//get friendly name of interface like "Local Area Connection"
-			if (getNetInterfaceName(uuid, name, sizeof(name)))
-				return -1;
-
 			found = 1;
-			enable_adapter_by_name(name, 1);
+			char idx[32];
+			sprintf(idx, "%d", (int)pIfRow->dwIndex);
+			enable_adapter_index(idx, 1);
 		}
 	} else {
 		error(0, "GetIfTable failed with error: \n", dwRetVal);

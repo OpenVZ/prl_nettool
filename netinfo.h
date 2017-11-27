@@ -39,6 +39,7 @@ struct netinfo
 {
 	char mac[MAC_LENGTH+1];
 	char name[NAME_LENGTH];
+	int idx; // windows adapter idx to be used with netsh
 	struct namelist *ip, *search, *dns;
 	struct namelist *ip_link; //link-local, site-local
 	struct namelist *gateway;
