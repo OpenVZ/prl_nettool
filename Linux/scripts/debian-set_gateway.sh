@@ -28,35 +28,8 @@ ETH_MAC=$3
 ETH_MAC_NW=`echo $ETH_MAC | sed "s,00,0,g"`
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
-	[ $? -eq 2 ] && exit 1
-	if [ ! -f "${NWMANAGER}" ] ; then
-		echo "Network manager ${NWMANAGER} not found"
-		exit 3
-	fi
-
-	for i in $NWSYSTEMCONNECTIONS/*; do
-		for gw in ${ETH_GATEWAY}; do
-			cat "$i" | grep -E "$ETH_MAC|$ETH_MAC_NW" >/dev/null 2>&1
-			if [ $? -eq 0 ]; then
-				if is_ipv6 ${gw}; then
-					[ "x$gw" = "xremove" ] && gw="::"
-					cat "$i" | awk -F ',' '
-					$1 ~ /^addresses1/ && $1 ~ /:/  { FS=";"; print $1",""'${gw}'"; next }
-					{ print }' > "$i.$$" && mv -f "$i.$$" "$i"; chmod 0600 "$i"
-
-				else
-					[ "x$gw" = "xremove" ] && gw="0.0.0.0"
-					cat "$i" | awk -F ';' '
-					$1 ~ /^addresses1/ && $1 ~ /\./ { FS=";"; print $1";"$2";'${gw}';"; next }
-					{ print }' > "$i.$$" && mv -f "$i.$$" "$i"; chmod 0600 "$i"
-				fi
-			fi
-		done
-	done
-
-	remove_debian_interfaces ${ETH_DEV}
-	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
+	call_nm_script $0 "$@"
+	exit $?
 else
 	for gw in ${ETH_GATEWAY}; do
 		inet="inet"

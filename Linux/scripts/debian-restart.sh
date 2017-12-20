@@ -58,26 +58,8 @@ function restart()
 	fi
 }
 
-
-function restart_nm() {
-	type nmcli > /dev/null 2>&1
-	if [ $? -eq 0 -a $# -ne 0 ]; then
-		call_nmcli device disconnect $1 &&
-			call_nmcli device connect $1 &&
-			return 0
-	fi
-
-	# In ubuntu 14.04 Desktop or based distros like Linux Mint
-	# network-manager is restarted and watched by initctl
-	type initctl > /dev/null 2>&1 &&
-		initctl restart network-manager
-	if [ $? -ne 0 ]; then
-		restart_nm_wait
-	fi
-}
-
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	restart_nm $1
+	call_nm_script $0 "$@"
 else
 	restart $1
 fi

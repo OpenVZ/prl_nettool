@@ -31,29 +31,12 @@ else
 	exit 2
 fi
 
-if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	ls $NWSYSTEMCONNECTIONS/* >/dev/null 2>&1
-	[ $? -eq 2 ] && exit 2
-	for i in $NWSYSTEMCONNECTIONS/*; do
-		cat "$i" | grep -E "$ETH_MAC|$ETH_MAC_NW" >/dev/null 2>&1
-		if [ $? -eq 0 ]; then
-			if [ "x${PROTO}" != "x6" ] ; then
-				cat "$i" | awk '
-					/^\[ipv4\]/ { catchsection=1; next; }
-					$1 ~ /^\[/ && catchsection { catchsection=0 }
-					$1 ~ /^method=auto/ && catchsection { exit 1 }
-					{ next } '
-			else
-				cat "$i" | awk '
-					/^\[ipv6\]/ { catchsection=1; next; }
-					$1 ~ /^\[/ && catchsection { catchsection=0 }
-					$1 ~ /^method=auto/ && catchsection { exit 1 }
-					{ next } '
-			fi
-			[ $? -eq 1 ] && exit 0 || exit 1
-		fi
-	done
-	exit 2
+nmscript=$path/nm-get_dhcp.sh
+
+is_nm_active
+if [ $? -eq 0 -a -f $nmscript ]; then
+	$nmscript "$@"
+	exit $?
 else
 
 	if [ "x${PROTO}" == "x6" ] ; then

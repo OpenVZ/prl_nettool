@@ -27,7 +27,10 @@ ETH_GATEWAY=$2
 ETH_MAC=$3
 ETH_MAC_NW=`echo $ETH_MAC | sed "s,00,0,g"`
 
-if [ ! -f $NWSYSTEMCONF -a ! -f $NMCONFFILE ]; then
+if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
+	call_nm_script $0 "$@"
+	exit $?
+else
 	for gw in ${ETH_GATEWAY}; do
 		inet="inet"
 

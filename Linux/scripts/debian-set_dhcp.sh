@@ -38,60 +38,8 @@ done
 
 
 if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
-	if [ ! -f "${NWMANAGER}" ] ; then
-		echo "Network manager ${NWMANAGER} not found"
-		exit 3
-	fi
-
-	ret=0
-	for dev in ${ETH_DEV} "${ETH_DEV}:[0-9]+"; do
-		remove_debian_interfaces $dev
-		[ $ret -eq 0 ] && ret=$?
-	done
-
-	[ $ret -ne 0 ] && restart_nm_wait
-
-	clean_nm_connections $ETH_DEV $ETH_MAC $ETH_MAC_NW
-
-	echo "[connection]
-id=$ETH_DEV
-uuid=`generate_uuid`
-type=802-3-ethernet
-autoconnect=true
-timestamp=0
-" > $NWSYSTEMCONNECTIONS/$ETH_DEV
-
-	if [ "x$PROTO4" == "xyes" ] ; then
-		echo "
-[ipv4]
-method=auto
-ignore-auto-routes=false
-ignore-auto-dns=false
-never-default=false
-" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
-	fi
-
-	if [ "x$PROTO6" == "xyes" ] ; then
-		echo "
-[ipv6]
-method=auto
-ignore-auto-routes=false
-ignore-auto-dns=false
-never-default=false
-" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
-	fi
-
-	echo "
-[802-3-ethernet]
-speed=0
-duplex=full
-auto-negotiate=true
-mac-address=$ETH_MAC_NW
-mtu=0" >> $NWSYSTEMCONNECTIONS/$ETH_DEV
-
-	chmod 0600 $NWSYSTEMCONNECTIONS/$ETH_DEV
-
-	nm_connection_reload ${ETH_DEV}
+	call_nm_script $0 "$@"
+	exit $?
 else
 	remove_debian_interfaces "${ETH_DEV}:[0-9]+"
 	remove_debian_interfaces ${ETH_DEV}
