@@ -87,6 +87,17 @@ struct netinfo *netinfo_search_name(struct netinfo **netinfo_head, const char *n
 	return NULL;
 }
 
+struct netinfo *netinfo_search_idx(struct netinfo **netinfo_head, int idx)
+{
+	struct netinfo *it = *netinfo_head;
+	while (it != NULL){
+		if (it->idx == idx)
+			return it;
+		it = it->next;
+	}
+	return NULL;
+}
+
 void netinfo_free(struct netinfo *it)
 {
 	if (it == NULL)

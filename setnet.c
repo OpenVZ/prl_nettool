@@ -961,28 +961,28 @@ int clean(struct netinfo *if_it)
 	return 0;
 }
 
-static int enable_adapter_index(const char *idx, int enable)
+static int enable_adapter_name(const char *name, int enable)
 {
 	char str[1024];
 	int rc = 0;
 
-	if (!enable) //save disabled
-		save_adapter_disabled(idx, 0);
+	error(0, "enable_adapter_name(%s, %d)\n", name, enable);
 
-	sprintf(str, "interface set interface \"%s\" %s", idx, enable ? "ENABLE" : "DISABLE");
+	if (!enable) //save disabled
+		save_adapter_disabled(name, 0);
+
+	sprintf(str, "interface set interface \"%s\" %s", name, enable ? "ENABLE" : "DISABLE");
 	rc = exec_netsh(str);
 
 	if (enable && rc == 0) //save only if successfully enabled
-		save_adapter_disabled(idx, 1);
+		save_adapter_disabled(name, 1);
 
 	return 0;
 }
 
 int enable_adapter(struct netinfo *if_it, int enable)
 {
-	char idx[32];
-	sprintf(idx, "%d", if_it->idx);
-	return enable_adapter_index(idx, enable);
+	return enable_adapter_name(if_it->name, enable);
 }
 
 int restore_adapter_state()
@@ -1005,7 +1005,7 @@ int restore_adapter_state()
 	while(it) {
 		found = 1;
 		error(0, "Restore '%s'", it->name );
-		enable_adapter_index(it->name, 1);
+		enable_adapter_name(it->name, 1);
 		it = it->next;
 	}
 
@@ -1089,10 +1089,7 @@ int enable_disabled_adapter(const char *mac)
 			//convert wchar to char
 			snprintf(uuid, sizeof(uuid), "%wS", uuid_start);
 
-			found = 1;
-			char idx[32];
-			sprintf(idx, "%d", (int)pIfRow->dwIndex);
-			enable_adapter_index(idx, 1);
+			enable_adapter_name(uuid, 1);
 		}
 	} else {
 		error(0, "GetIfTable failed with error: \n", dwRetVal);

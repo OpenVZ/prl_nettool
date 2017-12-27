@@ -60,6 +60,7 @@ void netinfo_free(struct netinfo *if_info);
 struct netinfo *netinfo_get_first(struct netinfo **netinfo_head);
 struct netinfo *netinfo_search_mac(struct netinfo **netinfo_head, const char *mac);
 struct netinfo *netinfo_search_name(struct netinfo **netinfo_head, const char *name);
+struct netinfo *netinfo_search_idx(struct netinfo **netinfo_head, int idx);
 void netinfo_clean(struct netinfo **netinfo_head);
 const char *mac_to_str(unsigned char *addr, size_t alen, char *buf, size_t blen);
 int split_ip_mask(const char *ip_mask, char* ip, char *mask);

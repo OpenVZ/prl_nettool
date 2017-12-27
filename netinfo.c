@@ -112,7 +112,7 @@ int read_searchdomain(struct netinfo **netinfo_head)
 
 	rc = RegQueryValueExA(hKey, S_SEARCHLIST_REG_NAME, NULL, &dwType, (LPBYTE)domains, &len);
 	if (rc != ERROR_SUCCESS){
-		error(errno, "Can't read registry %s\n", S_TCPPARAMS_REG_VALUE_KEY);
+		//error(errno, "Can't read registry %s\n", S_TCPPARAMS_REG_VALUE_KEY);
 		RegCloseKey(hKey);
 		return 1;
 	}
@@ -526,7 +526,8 @@ void wait_for_start(const struct namelist *adapters)
 		while(it != NULL)
 		{
 			if (netinfo_search_mac(&netinfo_head, it->name) == NULL
-				&& netinfo_search_name(&netinfo_head, it->name) == NULL)
+				&& netinfo_search_name(&netinfo_head, it->name) == NULL
+				&& netinfo_search_idx(&netinfo_head, atoi(it->name)) == NULL)
 			{
 				//not found -> not started
 				all_enabled = 0;
