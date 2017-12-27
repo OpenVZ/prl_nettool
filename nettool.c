@@ -150,7 +150,6 @@ int is_equal_dhcp(struct netinfo *if_it, struct nettool_mac *mac_it)
 	debug("DHCP;%s;%s\n", if_it->mac, mac_it->value);
 	debug("configured_with_dhcp=%d configured_with_dhcpv6=%d\n",
 	      if_it->configured_with_dhcp, if_it->configured_with_dhcpv6);
-	fflush(stdout);
 #endif
 
 	if (!net_opts.compare)
@@ -398,11 +397,7 @@ int apply_parameters()
 				debug("is_equal_dns(if_it, mac_it)=%d\n", is_equal_dns(if_it, mac_it));
 #endif
 			if (!net_opts.compare ||
-			    /* Always do reconfigure if dhcp specified.
-			     * quick fix for bug #PSBM-16222.
-			     * The is_equal_dhcp do not take into account IP change
-			     * (opt == NET_OPT_DHCP && !is_equal_dhcp(if_it, mac_it)) || */
-			    (opt == NET_OPT_DHCP) ||
+			    (opt == NET_OPT_DHCP && !is_equal_dhcp(if_it, mac_it)) ||
 			    (opt == NET_OPT_IP && !is_equal_ip(if_it, mac_it)) ||
 			    (opt == NET_OPT_GATEWAY && !is_equal_gateway(if_it, mac_it)) ||
 			    (opt == NET_OPT_DNS && !is_equal_dns(if_it, mac_it)))
