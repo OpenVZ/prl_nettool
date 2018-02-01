@@ -169,7 +169,7 @@ void debug(const char *fmt, ...)
 	int pid = (int)getpid();
 #ifdef _WIN_
 	DWORD dw;
-	HANDLE fd = CreateFileA(LOGFILE, FILE_APPEND_DATA, FILE_SHARE_WRITE, NULL,
+	HANDLE fd = CreateFileA(LOGFILE, FILE_APPEND_DATA, FILE_SHARE_READ, NULL,
 				OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (fd == INVALID_HANDLE_VALUE)
 		fd = NULL;

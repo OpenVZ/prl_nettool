@@ -712,6 +712,13 @@ int main(int argc, char* argv[])
 {
 	VARUNUSED(argc);
 
+#ifdef _WIN_
+	if (!SetConsoleCP(CP_UTF8))
+		error(0, "SetConsoleCP(CP_UTF8) error %d", GetLastError());
+	if (!SetConsoleOutputCP(CP_UTF8))
+		error(0, "SetConsoleOutputCP(CP_UTF8) error %d", GetLastError());
+#endif
+
 	debug("%s started", argv[0]);
 
 #if defined(_WIN_) && (NTDDI_VERSION < NTDDI_LONGHORN)

@@ -401,6 +401,9 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 			need_list_add = TRUE;
 			strcpy(if_it->mac, mac_buf);
 			if_it->idx = pCurrAddresses->IfIndex;
+
+			WideCharToMultiByte(CP_UTF8, 0, pCurrAddresses->FriendlyName, -1,
+				 	if_it->name, sizeof(if_it->name), NULL, NULL);
 		}
 
 		if (pCurrAddresses->Flags & IP_ADAPTER_DHCP_ENABLED)
@@ -461,8 +464,6 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 
 			namelist_add(ip, &(if_it->dns));
 		}
-
-		sprintf(if_it->name, "%wS", pCurrAddresses->FriendlyName);
 
 		if (pCurrAddresses->FirstGatewayAddress != NULL)
 		{

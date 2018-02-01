@@ -61,8 +61,11 @@ static int exec_cmd(char *cmd)
 
 	debug("run: %s\n", cmd);
 	startinfo.cb = sizeof(startinfo);
-	_snwprintf(cmdline, sizeof(cmdline)/sizeof(*cmdline), L"%hs", cmd);
-	cmdline[sizeof(cmdline)/sizeof(*cmdline)-1] = 0;
+	if (MultiByteToWideChar(CP_UTF8, 0, cmd, -1, cmdline, sizeof(cmdline)/sizeof(*cmdline)) == 0) {
+		rc = GetLastError();
+		error(rc, "Failed to format %s", cmd);
+		return rc;
+	}
 	if (!CreateProcessW(NULL,
 			    cmdline,		// command line
 			    NULL,		// process security attributes
@@ -966,7 +969,7 @@ static int enable_adapter_name(const char *name, int enable)
 	char str[1024];
 	int rc = 0;
 
-	error(0, "enable_adapter_name(%s, %d)\n", name, enable);
+	debug("enable_adapter_name(%s, %d)\n", name, enable);
 
 	if (!enable) //save disabled
 		save_adapter_disabled(name, 0);
