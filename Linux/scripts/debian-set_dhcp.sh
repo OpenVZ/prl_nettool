@@ -36,8 +36,10 @@ for proto in ${PROTO}; do
 	fi
 done
 
-
-if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
+if is_netplan_controlled; then
+	$path/$NETPLAN_CFG -a "set_dhcp" -d "$ETH_DEV" -p "$PROTO"
+	exit $?
+elif [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
 	call_nm_script $0 "$@"
 	exit $?
 else

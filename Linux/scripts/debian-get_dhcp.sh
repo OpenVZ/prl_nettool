@@ -33,6 +33,11 @@ fi
 
 nmscript=$path/nm-get_dhcp.sh
 
+if is_netplan_controlled; then
+	$path/$NETPLAN_CFG -a "get_dhcp" -d "$ETH_DEV" -p "$PROTO"
+	exit $?
+fi
+
 is_nm_active
 if [ $? -eq 0 -a -f $nmscript ]; then
 	$nmscript "$@"

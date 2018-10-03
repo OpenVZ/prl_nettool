@@ -29,7 +29,7 @@ INITDIR="/etc/init.d"
 NETTOOL_LOG="/var/log/vz-nettool.log"
 DEBIAN_CONFIGFILE="/etc/network/interfaces"
 DEBIAN_CONFIGFILES="$DEBIAN_CONFIGFILE /etc/network/interfaces.d/*"
-
+NETPLAN_CFG="netplan-cfg.py"
 #options used in *-set_ip.sh
 USE_DHCPV4=0
 USE_DHCPV6=0
@@ -291,6 +291,15 @@ function del_param3() {
 		mv -f ${file}.$$ ${file}
 	else
 		return
+	fi
+}
+
+function is_netplan_controlled()
+{
+	if which netplan >/dev/null 2>/dev/null; then
+		return 0
+	else
+		return 1
 	fi
 }
 

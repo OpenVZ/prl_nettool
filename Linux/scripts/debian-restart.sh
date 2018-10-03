@@ -58,7 +58,10 @@ function restart()
 	fi
 }
 
-if [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
+if is_netplan_controlled; then
+	$path/$NETPLAN_CFG -a "restart" -d "$1"
+	exit $?
+elif [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
 	call_nm_script $0 "$@"
 else
 	restart $1
