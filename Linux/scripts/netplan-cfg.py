@@ -89,19 +89,19 @@ class npConfig(object):
 		"""
 		set_gateway action implementation for netplan config
 		"""
-		if 'remove' in self._ip:
-			return
-
 		ifcfg = self.config["network"]["ethernets"][self._ifname]
+		for ip in self._ip.split():
+			if 'remove' in ip:
+				continue
 
-		gw_proto = "gateway4"
-		if is_ip_proto(self._ip, 6):
-			gw_proto = "gateway6"
+			gw_proto = "gateway4"
+			if is_ip_proto(ip, 6):
+				gw_proto = "gateway6"
 
-		if "routes" in ifcfg:
-			ifcfg.pop("routes")
+			if "routes" in ifcfg:
+				ifcfg.pop("routes")
 
-		ifcfg[gw_proto] = self._ip.split()[0]
+			ifcfg[gw_proto] = ip
 
 	def __set_dhcp(self):
 		"""
