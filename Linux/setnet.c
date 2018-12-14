@@ -109,7 +109,8 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params){
 	 * but it brings a lot of problems when e.g. iface is bridged
 	 * so just leave the old (global, not per-interface) behaviour.
 	 * */
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"%s\" \"\" \"\" \"%s\"",
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"%s\" \"%s\" \"%s\" \"\" \"\" \"%s\"",
+			if_it->name, if_it->mac,
 			params->value, (os_script_prefix != NULL) ?  os_script_prefix : "") >= PATH_MAX)
 	{
 		werror("ERROR: Command line for execution set_dns.sh is too long");
@@ -127,7 +128,7 @@ int set_search_domain(struct nettool_mac *params) {
 	if (params->value == NULL)
 		return 0;
 
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"%s\"",
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"%s\"",
 			params->value) >= PATH_MAX)
 	{
 		werror("ERROR: Command line for execution set_dns.sh is too long");
@@ -151,7 +152,7 @@ int set_hostname(struct nettool_mac *params)
 	while (len > 0 && params->value[len-1] == '.')
 		params->value[--len] = 0;
 
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"%s\" \"%s\"",
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"\" \"%s\" \"%s\"",
 		params->value, (os_script_prefix != NULL) ?  os_script_prefix : "")
 				>= PATH_MAX) {
 		werror("ERROR: Command line for execution set_dns.sh is too long");
