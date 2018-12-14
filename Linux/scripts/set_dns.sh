@@ -21,10 +21,13 @@ else
 	exit 1
 fi
 
-NAMESERVER="$1"
-SEARCHDOMAIN="$2"
-HOSTNAME="$3"
-DISTR="$4"
+ETH_DEV=$1
+ETH_MAC=$2
+
+NAMESERVER="$3"
+SEARCHDOMAIN="$4"
+HOSTNAME="$5"
+DISTR="$6"
 
 RESOLVDIR=/etc/resolvconf
 RESOLVCONF_LNK="${RESOLVDIR}/run/resolv.conf"
@@ -135,6 +138,12 @@ function set_hostname()
 		echo "${hostname}" > /etc/hostname
 	fi
 }
+
+is_nm_active
+if [ $? -eq 0 ]; then
+        call_nm_script $0 "$@"
+        exit $?
+fi
 
 set_dns /etc/resolv.conf "${NAMESERVER}" "${SEARCHDOMAIN}" "${DISTR}"
 set_hostname "${HOSTNAME}" "${DISTR}"

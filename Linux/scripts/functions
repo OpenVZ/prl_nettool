@@ -782,6 +782,10 @@ call_nm_script()
 {
 	local from=$1
 	local nmscript=`echo $from | sed 's@\(.*/\)\(redhat\|debian\|suse\)@\1nm@'`
+	if [ $nmscript = $from ]; then
+		#scriptdir/set_dns.sh have no os prefix, handle it here
+		nmscript=`echo $from | sed 's@\(.*/\)@\1nm-@'`
+	fi
 
 	is_nm_active
 	if [ $? -eq 0 -a -f $nmscript ]; then
