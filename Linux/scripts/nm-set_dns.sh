@@ -28,24 +28,14 @@ NAMESERVER="$3"
 SEARCHDOMAIN="$4"
 HOSTNAME="$5"
 
-if [ -z "$ETH_DEV" ]; then
-	uuid=`LC_ALL=C nmcli -t c show --active | cut -d: -f2` ||
-		exit $?
-else
-	uuid=`nm_check_and_create $ETH_DEV $ETH_MAC` ||
-		exit $?
-fi
-
-[ `expr length "$uuid"` -eq 36 ] ||
-	exit $?
-
 function set_dns()
 {
 	local errors=0
 	local nameservers="$1"
-
-	# nothing to do
 	[ -z "${nameservers}" ] && return 0
+
+	local uuid=`nm_check_and_create $ETH_DEV $ETH_MAC`
+	[ -z "${uuid}" ] && return 0
 
 	local ns4=""
 	local ns6=""
@@ -62,6 +52,8 @@ function set_dns()
 	call_nmcli c modify $uuid ipv4.dns "${ns4}"
 	call_nmcli c modify $uuid ipv6.dns "${ns6}"
 
+	call_nmcli c up ${uuid}
+
 	return $errors
 }
 
@@ -72,10 +64,14 @@ function set_domains()
 
 	# nothing to do
 	[ -z "${domains}" ] && return 0
-
 	domains=`echo "${domains}" | tr -s ' ' ','`
 
-	call_nmcli c modify $uuid ipv4.dns-search "${domains}"
+	LC_ALL=C nmcli -t c show --active | cut -d: -f2 | \
+	while read uuid
+	do
+		call_nmcli c modify ${uuid} ipv4.dns-search "${domains}"
+		call_nmcli c up ${uuid}
+	done
 
 	return $errors
 }
@@ -95,7 +91,5 @@ function set_hostname()
 set_dns "${NAMESERVER}"
 set_domains "${SEARCHDOMAIN}"
 set_hostname "${HOSTNAME}"
-
-call_nmcli c up ${uuid}
 
 exit 0
