@@ -224,8 +224,6 @@ function apply()
 	#stop adapter
 	if [ "x$RESTART_NETWORK" = "xyes" ]; then
 		/etc/init.d/network stop
-	elif ! is_nm_present; then
-		$SYSTEMCTL stop NetworkManager
 	else
 		/sbin/ifdown ${ETH_DEV}
 	fi
@@ -235,8 +233,6 @@ function apply()
 	#start adapter
 	if [ "x$RESTART_NETWORK" = "xyes"  ]; then
 		/etc/init.d/network start
-	elif ! is_nm_present; then
-		$SYSTEMCTL start NetworkManager
 	else
 		/sbin/ifup ${ETH_DEV}
 	fi
