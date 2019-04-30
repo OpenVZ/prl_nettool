@@ -85,11 +85,30 @@ class npConfig(object):
 		"""
 		self.config = {'network': {"version": 2, 'ethernets': {self._ifname: {}}}}
 
+	def __get_route_tree(self):
+		"""
+		Retrieve pointer to the route subtree
+		"""
+		# Create empty list if it is missing to avoid KeyValue exceptions
+		if "routes" not in self.config["network"]["ethernets"][self._ifname]:
+			self.config["network"]["ethernets"][self._ifname]["routes"] = []
+
+		# Return subtree pointer to shorten and simplify further code
+		return self.config["network"]["ethernets"][self._ifname]["routes"]
+
 	def __set_gateway(self):
 		"""
 		set_gateway action implementation for netplan config
 		"""
 		ifcfg = self.config["network"]["ethernets"][self._ifname]
+
+		# to comply with scripts, we should only remove routes if there is
+		# at least single valid gateway to configure besides "remove*"
+		for ip in self._ip.split():
+			if 'remove' not in ip:
+				if "routes" in ifcfg:
+					ifcfg.pop("routes")
+
 		for ip in self._ip.split():
 			if 'remove' in ip:
 				continue
@@ -98,10 +117,14 @@ class npConfig(object):
 			if is_ip_proto(ip, 6):
 				gw_proto = "gateway6"
 
-			if "routes" in ifcfg:
-				ifcfg.pop("routes")
-
 			ifcfg[gw_proto] = ip
+
+			# Configure on-link route to host-routed gateway
+			if  ip == "169.254.0.1":
+				route_tree = self.__get_route_tree()
+				route = {"to": "169.254.0.1", "via": "0.0.0.0", "scope": "link"}
+				if route not in route_tree:
+					route_tree.append(route)
 
 	def __set_dhcp(self):
 		"""
@@ -125,14 +148,9 @@ class npConfig(object):
 
 	def __set_route(self):
 		"""
-		set_dhcp action implementation for netplan config
+		set_route action implementation for netplan config
 		"""
-		# Create empty list if it is missing to avoid KeyValue exceptions
-		if "routes" not in self.config["network"]["ethernets"][self._ifname]:
-			self.config["network"]["ethernets"][self._ifname]["routes"] = []
-
-		# Take subtree pointer to shorten and simplify further code
-		route_tree = self.config["network"]["ethernets"][self._ifname]["routes"]
+		route_tree = self.__get_route_tree()
 
 		if self._ip == 'remove':
 			for route in route_tree:
@@ -275,6 +293,7 @@ class npConfig(object):
 
 		self.__save()
 		self.__restart()
+		return 0
 
 
 """
