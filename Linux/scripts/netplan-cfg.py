@@ -125,7 +125,7 @@ class npConfig(object):
 
 	def __set_route(self):
 		"""
-		set_dhcp action implementation for netplan config
+		set_route action implementation for netplan config
 		"""
 		# Create empty list if it is missing to avoid KeyValue exceptions
 		if "routes" not in self.config["network"]["ethernets"][self._ifname]:
