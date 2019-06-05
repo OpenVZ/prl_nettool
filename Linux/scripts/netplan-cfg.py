@@ -55,7 +55,7 @@ def split_route(route):
 	to = res[0]
 	via = res[1]
 	if res.__len__() > 2:
-		metric = res[2]
+		metric = int(res[2])
 	else:
 		metric = ""
 	return to, via, metric
