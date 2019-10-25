@@ -65,6 +65,7 @@ struct netinfo *netinfo_search_idx(struct netinfo **netinfo_head, int idx);
 void netinfo_clean(struct netinfo **netinfo_head);
 const char *mac_to_str(unsigned char *addr, size_t alen, char *buf, size_t blen);
 int split_ip_mask(const char *ip_mask, char* ip, char *mask);
+void wait_for_start(const struct namelist *adapters);
 
 #ifdef _WIN_
 
@@ -84,7 +85,6 @@ int split_ip_mask(const char *ip_mask, char* ip, char *mask);
 #define S_COMPUTER_NAME_REG_VALUE_KEY "SYSTEM\\CurrentControlSet\\Control\\ComputerName\\ComputerName"
 
 int getNetInterfaceName(const char *pAdapterGuid, char* adapterName, int size);
-void wait_for_start(const struct namelist *adapters);
 
 #endif
 

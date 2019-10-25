@@ -488,66 +488,6 @@ int read_ifconf_vista(int fam, struct netinfo **netinfo_head)
 
 #endif
 
-void wait_for_start(const struct namelist *adapters)
-{
-	int enable_count;
-	struct netinfo *netinfo_head;
-	const struct namelist *it;
-
-	netinfo_head = NULL;
-
-	for(enable_count=0; enable_count <= 5*60; enable_count++) // wait up to 5 minute
-	{
-		int all_enabled = 1;
-		int rc;
-
-		if (enable_count)
-			Sleep(1000);
-
-		//reload information in system
-		rc = get_device_list(&netinfo_head);
-		switch (rc)
-		{
-			// Wait for non-permanent errors to disappear:
-			//  ERROR_NO_DATA from GetAdaptersInfo()
-			//	network device list is not available yet
-			//  ERROR_FILE_NOT_FOUND from getNetInterfaceName()
-			//	interface is not yet completed pnp configuration
-		case ERROR_NO_DATA:
-		case ERROR_FILE_NOT_FOUND:
-			continue;
-		case NO_ERROR:
-			break;
-		default:
-			error(rc, "get_device_list failed: %d", rc);
-			return;
-		}
-
-		//check enabled adapter
-		it = adapters;
-		while(it != NULL)
-		{
-			if (netinfo_search_mac(&netinfo_head, it->name) == NULL
-				&& netinfo_search_name(&netinfo_head, it->name) == NULL
-				&& netinfo_search_idx(&netinfo_head, atoi(it->name)) == NULL)
-			{
-				//not found -> not started
-				all_enabled = 0;
-				break;
-			}
-
-			it=it->next;
-		}
-
-		netinfo_clean(&netinfo_head);
-
-		if (all_enabled) {
-			debug("Adapters enabled during %d seconds", enable_count);
-			return;
-		}
-	}
-}
-
 int get_device_list(struct netinfo **netinfo_head) {
 	int rc;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)

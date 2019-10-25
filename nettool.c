@@ -664,6 +664,7 @@ int do_work()
 	//first - restore adapters #PSBM-9930
 	restore_adapter_state();
 //#endif
+#endif
 	//#PSBM-9930 and #PSBM-35109
 	//sometimes initial pnp configuration of network adapters takes much time
 	//we need to wait at least for GetAdaptersInfo() to be successfull
@@ -686,7 +687,6 @@ int do_work()
 			namelist_clean(&wait_adapters);
 		}
 	}
-#endif
 
 	if (net_opts.action == GET)
 		rc = print_parameters();
