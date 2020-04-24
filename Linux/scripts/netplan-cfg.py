@@ -51,13 +51,16 @@ def split_route(route):
 	 "X.X.X.X/Z=X.X.X.Ym100" -> "X.X.X.X/Z X.X.X.Y 100"
 	Return tuple (to, via, metric)
 	"""
-	res = re.split("[m=]", route)
+	via = "0.0.0.0"
+	metric = ""
+	res = re.split("m", route.strip())
+	if res.__len__() == 2:
+		metric = int(res[1])
+	res = re.split("=", res[0])
+	if res.__len__() == 2:
+		via = res[1]
 	to = res[0]
-	via = res[1]
-	if res.__len__() > 2:
-		metric = int(res[2])
-	else:
-		metric = ""
+
 	return to, via, metric
 
 def netmask_to_cidr(netmask):
