@@ -50,6 +50,7 @@
 #define SCM_TIMEOUT (120*1000)
 
 extern struct nettool_options net_opts;
+extern char * os_script_prefix;
 
 int print_parameters()
 {
@@ -698,6 +699,10 @@ int do_work()
 		rc = restart_network();
 	else
 		error(0, "ERROR: unknown action %d", net_opts.action);
+
+	if (rc == 0 && net_opts.action == SET &&
+		os_script_prefix != NULL && strcmp("debian", os_script_prefix) == 0)
+		rc = restart_network();
 
 	single_app_unlock();
 

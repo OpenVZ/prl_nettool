@@ -220,17 +220,23 @@ class npConfig(object):
 		"""
 		restart action implementation for netplan config
 		"""
+		p = subprocess.Popen("netplan apply".split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out = p.communicate()
+
+		if p.returncode:
+			print("netplan apply failed [%d].\nstdout:%s\nstderr:%s\n" %
+				(p.returncode, str(out[0]), str(out[1])))
+
+		return p.returncode
+
+	def __generate(self):
+		"""
+		restart action implementation for netplan config
+		"""
 		p = subprocess.Popen("netplan generate".split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		out = p.communicate()
 
-		if p.returncode == 0:
-			p = subprocess.Popen("netplan apply".split())
-			out = p.communicate()
-
-			if p.returncode:
-				print("netplan apply failed [%d].\nstdout:%s\nstderr:%s\n" %
-					(p.returncode, str(out[0]), str(out[1])))
-		else:
+		if p.returncode:
 			print("netplan generate failed [%d].\nstdout:%s\nstderr:%s\n" %
 				(p.returncode, str(out[0]), str(out[1])))
 
@@ -261,7 +267,7 @@ class npConfig(object):
 		"""
 		if os.path.exists(self.filename):
 			with open(self.filename) as f:
-				self.config = yaml.load(f.read())
+				self.config = yaml.load(f.read(), Loader=yaml.SafeLoader)
 		else:
 			self.__generate_skeleton_config()
 
@@ -295,7 +301,7 @@ class npConfig(object):
 			self.__set_gateway()
 
 		self.__save()
-		self.__restart()
+		self.__generate()
 		return 0
 
 

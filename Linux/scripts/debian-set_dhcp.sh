@@ -70,7 +70,5 @@ if [ "x$PROTO4" == "xyes" ] ; then
 	ip -4 addr flush dev ${ETH_DEV}
 fi
 
-$path/debian-restart.sh ${ETH_DEV}
-
 exit 0
 # end of script
