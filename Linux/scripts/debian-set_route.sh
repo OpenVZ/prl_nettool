@@ -86,8 +86,6 @@ else
 		awk "${cmd}" < ${DEBIAN_CONFIGFILE} > ${DEBIAN_CONFIGFILE}.$$ && \
 			mv -f ${DEBIAN_CONFIGFILE}.$$ ${DEBIAN_CONFIGFILE}
 	done
-
-	$path/debian-restart.sh ${ETH_DEV}
 fi
 exit 0
 # end of script
