@@ -84,6 +84,9 @@ function set_dns()
 	[ -f "${dhclientconf}" ] || touch "${dhclientconf}"
 
 	if [ -n "${search}" ]; then
+		# value for empty search list
+		[ "${search}" = "remove" ] && search=""
+
 		# Multiple spaces in name are unsupported by put_param2
 		sed -i "/prepend\s\+domain-search.*/d" ${dhclientconf} || \
 				error "Can't change file ${dhclientconf}" ${VZ_FS_NO_DISK_SPACE}

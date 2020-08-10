@@ -375,9 +375,14 @@ int set_search_domain(struct nettool_mac *params)
 	ULONG len;
 	struct namelist *names = NULL;
 	struct namelist *name;
+	const char *value = params->value;
 
-	if (params->value == NULL)
+	if (value == NULL)
 		return 0;
+
+	if (!strcmp(value, "remove"))
+		/* empty search domain list */
+		value = "";
 
 	domains[0] = '\0';
 	if (strlen(params->value) > 0) {
