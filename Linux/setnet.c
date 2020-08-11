@@ -129,7 +129,7 @@ int set_search_domain(struct nettool_mac *params) {
 	if (params->value == NULL)
 		return 0;
 
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"%s\"",
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"\" \"\" \"%s\"",
 			params->value) >= PATH_MAX)
 	{
 		werror("ERROR: Command line for execution set_dns.sh is too long");

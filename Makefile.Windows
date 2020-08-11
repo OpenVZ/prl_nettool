@@ -5,7 +5,7 @@ CC32 = i686-w64-mingw32-gcc
 CC64 = x86_64-w64-mingw32-gcc
 WLH = -D_WIN32_WINNT=0x0600
 WXP = -D_WIN32_WINNT=0x0502
-CFLAGS = -Wall -Wno-unused -Wno-unused-function -O2 -D_WIN_ $(WINVER) -DVERSION=\"$(VERSION)\"
+CFLAGS = -Wall -Wno-unused -Wno-unused-function -O0 -g -D_WIN_ $(WINVER) -DVERSION=\"$(VERSION)\"
 CFLAGS += -DDEBUG_OPT_COMPARE
 DESTDIR=
 LDFLAGS = -liphlpapi -ldnsapi -lole32 -lws2_32 -lcfgmgr32

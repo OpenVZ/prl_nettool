@@ -64,6 +64,10 @@ function set_domains()
 
 	# nothing to do
 	[ -z "${domains}" ] && return 0
+
+	# value for empty search list
+	[ "${domains}" = "remove" ] && domains=""
+
 	domains=`echo "${domains}" | tr -s ' ' ','`
 
 	LC_ALL=C nmcli -t c show --active | cut -d: -f2 | \

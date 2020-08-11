@@ -700,9 +700,11 @@ int do_work()
 	else
 		error(0, "ERROR: unknown action %d", net_opts.action);
 
+#ifdef _LIN_
 	if (rc == 0 && net_opts.action == SET &&
 		os_script_prefix != NULL && strcmp("debian", os_script_prefix) == 0)
 		rc = restart_network();
+#endif
 
 	single_app_unlock();
 
