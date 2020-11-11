@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2015-2017, Parallels International GmbH
-# Copyright (c) 2017-2019 Virtuozzo International GmbH. All rights reserved.
+# Copyright (c) 2017-2020 Virtuozzo International GmbH. All rights reserved.
 #
 # This script configure IP alias(es) inside Debian like VM.
 #
@@ -20,7 +20,7 @@ if [ -f "$funcs" ] ; then
 	. $funcs
 else
 	echo "Program $0"
-	echo "File ${func} not found"
+	echo "File ${funcs} not found"
 	exit 1
 fi
 
@@ -206,6 +206,8 @@ elif [ -f $NWSYSTEMCONF -o -f $NMCONFFILE ]; then
 else
 	set_ip
 fi
+
+$path/debian-restart.sh ${ETH_DEV}
 
 exit 0
 # end of script

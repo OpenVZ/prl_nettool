@@ -14,7 +14,7 @@ if [ -f "$funcs" ] ; then
 	. $funcs
 else
 	echo "Program $prog"
-	echo "File ${func} not found"
+	echo "File ${funcs} not found"
 	exit 1
 fi
 
