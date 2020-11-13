@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Parallels International GmbH
- * Copyright (c) 2017-2019 Virtuozzo International GmbH. All rights reserved.
+ * Copyright (c) 2017-2020 Virtuozzo International GmbH. All rights reserved.
  *
  * This file is part of OpenVZ. OpenVZ is free software;
  * you can redistribute it and/or modify it under the terms of the GNU
@@ -703,7 +703,7 @@ int do_work()
 #ifdef _LIN_
 	if (rc == 0 && net_opts.action == SET &&
 		os_script_prefix != NULL && strcmp("debian", os_script_prefix) == 0)
-		rc = restart_network();
+		rc = restart_debian_netplan_network();
 #endif
 
 	single_app_unlock();

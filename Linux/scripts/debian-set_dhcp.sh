@@ -1,6 +1,6 @@
 #!/bin/bash
 # Copyright (c) 2015-2017, Parallels International GmbH
-# Copyright (c) 2017-2019 Virtuozzo International GmbH. All rights reserved.
+# Copyright (c) 2017-2020 Virtuozzo International GmbH. All rights reserved.
 #
 # This script configure adapter to use DHCP inside Debian like VM.
 #
@@ -69,6 +69,8 @@ if [ "x$PROTO4" == "xyes" ] ; then
 	#clean old IPv4
 	ip -4 addr flush dev ${ETH_DEV}
 fi
+
+$path/debian-restart.sh ${ETH_DEV}
 
 exit 0
 # end of script

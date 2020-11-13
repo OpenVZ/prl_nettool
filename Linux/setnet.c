@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2015-2017, Parallels International GmbH
- * Copyright (c) 2017-2019 Virtuozzo International GmbH. All rights reserved.
+ * Copyright (c) 2017-2020 Virtuozzo International GmbH. All rights reserved.
  *
  * This file is part of OpenVZ. OpenVZ is free software;
  * you can redistribute it and/or modify it under the terms of the GNU
@@ -340,4 +340,9 @@ int restart_guest_network()
 		return -1;
 	}
 	return run_cmd(cmd);
+}
+
+int restart_debian_netplan_network()
+{
+	return run_cmd(SCRIPT_DIR "/debian-netplan_restart.sh");
 }
