@@ -97,6 +97,16 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params){
 	return rc;
 }
 
+/*
+set_dns options:
+
+	ETH_DEV=$1
+	ETH_MAC=$2
+	NAMESERVER="$3"
+	SEARCHDOMAIN="$4"
+	HOSTNAME="$5"
+	DISTR="$6"
+*/
 int set_dns(struct netinfo *if_it, struct nettool_mac *params){
 	char cmd[PATH_MAX+1];
 	int rc;
@@ -129,8 +139,8 @@ int set_search_domain(struct nettool_mac *params) {
 	if (params->value == NULL)
 		return 0;
 
-	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"\" \"\" \"%s\"",
-			params->value) >= PATH_MAX)
+	if (snprintf(cmd, PATH_MAX, SCRIPT_DIR "/set_dns.sh \"\" \"\" \"\" \"%s\" \"\" \"%s\"",
+			params->value, (os_script_prefix != NULL) ?  os_script_prefix : "") >= PATH_MAX)
 	{
 		werror("ERROR: Command line for execution set_dns.sh is too long");
 		return -1;
