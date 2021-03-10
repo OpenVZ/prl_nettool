@@ -761,7 +761,7 @@ nm_check_and_create()
 
 	# Set mac to dhcp-client-id for same dhcp identefication on interface different configs
 	if [ $is_old -ne 0 ]; then
-		call_nmcli c modify $uuid ipv4.dhcp-client-id "$mac" ||
+		call_nmcli c modify $uuid ipv4.dhcp-client-id "1:$mac" ||
 			return $?
 		call_nmcli c modify $uuid ipv4.may-fail no ||
 			return $?
