@@ -520,11 +520,13 @@ need_to_disable_network_manager() (
 	local path="/etc/os-release"
 	if [ -f "$path" ]; then
 		source "$path"
+		VERSION_ID=${VERSION_ID//.*}
 		# no need to disable NetworkManager for Fedora >= 21
 		[ "$ID" == "fedora" -a $VERSION_ID -ge 21 ] && return 0
 		[ "$ID" == "centos" -a $VERSION_ID -ge 7 ] && return 0
 		[ "$ID" == "redos" -a $VERSION_ID -ge 7 ] && return 0
 		[ "$ID" == "virtuozzo" -a $VERSION_ID -ge 7 ] && return 0
+		[ "$ID" == "cloudlinux" -a $VERSION_ID -ge 7 ] && return 0
 	fi
 	return 1
 )
