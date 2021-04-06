@@ -524,6 +524,7 @@ need_to_disable_network_manager() (
 		[ "$ID" == "fedora" -a $VERSION_ID -ge 21 ] && return 0
 		[ "$ID" == "centos" -a $VERSION_ID -ge 7 ] && return 0
 		[ "$ID" == "redos" -a $VERSION_ID -ge 7 ] && return 0
+		[ "$ID" == "virtuozzo" -a $VERSION_ID -ge 7 ] && return 0
 	fi
 	return 1
 )
