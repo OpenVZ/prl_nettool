@@ -522,13 +522,14 @@ need_to_disable_network_manager() (
 		source "$path"
 		VERSION_ID=${VERSION_ID//.*}
 		# no need to disable NetworkManager for Fedora >= 21
-		[ "$ID" == "fedora" -a $VERSION_ID -ge 21 ] && return 0
-		[ "$ID" == "centos" -a $VERSION_ID -ge 7 ] && return 0
-		[ "$ID" == "redos" -a $VERSION_ID -ge 7 ] && return 0
-		[ "$ID" == "virtuozzo" -a $VERSION_ID -ge 7 ] && return 0
-		[ "$ID" == "cloudlinux" -a $VERSION_ID -ge 7 ] && return 0
+		[ "$ID" == "fedora" -a $VERSION_ID -lt 21 ] && return 1
+		[ "$ID" == "centos" -a $VERSION_ID -lt 7 ] && return 1
+		[ "$ID" == "redos" -a $VERSION_ID -lt 7 ] && return 1
+		[ "$ID" == "virtuozzo" -a $VERSION_ID -lt 7 ] && return 1
+		[ "$ID" == "cloudlinux" -a $VERSION_ID -lt 7 ] && return 1
+		[ "$ID" == "rhel" -a $VERSION_ID -lt 7 ] && return 1
 	fi
-	return 1
+	return 0
 )
 
 service_command()
