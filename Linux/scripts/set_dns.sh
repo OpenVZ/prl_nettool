@@ -90,7 +90,7 @@ function set_dns()
 		# Multiple spaces in name are unsupported by put_param2
 		sed -i "/prepend\s\+domain-search.*/d" ${dhclientconf} || \
 				error "Can't change file ${dhclientconf}" ${VZ_FS_NO_DISK_SPACE}
-		if [ "${search}" = '#' ]; then
+		if [ "${search}" = '#' -o -z "${search}" ]; then
 			sed -i "/search.*/d" ${cfgfile} || \
 				error "Can't change file ${cfgfile}" ${VZ_FS_NO_DISK_SPACE} 
 		else
