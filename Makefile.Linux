@@ -5,7 +5,7 @@ CFLAGS = $(RPM_OPT_FLAGS) -static -g -Wall -O2 -D_LIN_ -DVERSION=\"$(VERSION)\"
 DESTDIR=
 LDFLAGS = -lnetlink
 SBINDIR=$(DESTDIR)/usr/sbin
-SCRIPTSDIR=$(DESTDIR)/usr/lib/parallels-tools/tools/scripts
+SCRIPTSDIR=$(DESTDIR)/usr/lib/vz-tools/tools/scripts
 CLOUDINITDIR=$(DESTDIR)/etc/cloud/cloud.cfg.d
 
 all: prl_nettool

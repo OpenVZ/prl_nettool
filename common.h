@@ -44,7 +44,7 @@
 // Bad thing to hardcode path to scripts directory
 // For example, this prevents us to install into /usr/lib32
 // on 64-bit Debians
-#define SCRIPT_DIR	"/usr/lib/parallels-tools/tools/scripts"
+#define SCRIPT_DIR	"/usr/lib/vz-tools/tools/scripts"
 
 #endif
 
