@@ -88,6 +88,9 @@ function create_config()
 		put_param ${ifcfg} ONBOOT yes
 		put_param ${ifcfg} BOOTPROTO none
 		put_param ${ifcfg} HWADDR ${ETH_MAC}
+		if [ -n "${ifnum_postfix}" ]; then
+			put_param ${ifcfg} NO_ALIASROUTING yes
+		fi
 	fi
 	if [ ${is_nm_controlled} -eq 1 ]; then
 		put_param ${ifcfg} IPADDR${ifnum} "${ip}"
