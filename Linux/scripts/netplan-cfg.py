@@ -155,26 +155,28 @@ class npConfig(object):
 		"""
 		route_tree = self.__get_route_tree()
 
-		if self._ip == 'remove':
-			for route in route_tree:
-				if is_ip_proto(route["to"], 4):
-						route_tree.remove(route)
+		for ip in self._ip.split():
+			if ip == 'remove':
+				for route in route_tree:
+					if is_ip_proto(route["to"], 4):
+							route_tree.remove(route)
 
-		elif self._ip == 'remove6':
-			for route in route_tree:
-				if is_ip_proto(route["to"], 6):
-						route_tree.remove(route)
+			elif ip == 'remove6':
+				for route in route_tree:
+					if is_ip_proto(route["to"], 6):
+							route_tree.remove(route)
 
-		else:
-			to, via, metric = split_route(self._ip)
-			if metric:
-				route = {"to": to, "via": via, "metric": metric}
 			else:
+				to, via, metric = split_route(ip)
 				route = {"to": to, "via": via}
+				if metric:
+					route["metric"] = metric
+				if to == "169.254.0.1":
+					route["scope"] = "link"
 
-			# Check for duplicates before adding route
-			if route not in route_tree:
-				route_tree.append(route)
+				# Check for duplicates before adding route
+				if route not in route_tree:
+					route_tree.append(route)
 
 	def __set_ip(self):
 		"""
