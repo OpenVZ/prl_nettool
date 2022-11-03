@@ -116,15 +116,20 @@ class npConfig(object):
 			if 'remove' in ip:
 				continue
 
-			gw_proto = "gateway4"
-			if is_ip_proto(ip, 6):
-				gw_proto = "gateway6"
+			route_tree = self.__get_route_tree()
 
-			ifcfg[gw_proto] = ip
+			if self.__checkFeature("default-routes"):
+				route = {"via": ip, "on-link": "true", "to": "default"}
+				if route not in route_tree:
+					route_tree.append(route)
+			else:
+				gw_proto = "gateway4"
+				if is_ip_proto(ip, 6):
+					gw_proto = "gateway6"
+				ifcfg[gw_proto] = ip
 
 			# Configure on-link route to host-routed gateway
 			if  ip == "169.254.0.1":
-				route_tree = self.__get_route_tree()
 				route = {"to": "169.254.0.1", "via": "0.0.0.0", "scope": "link"}
 				if route not in route_tree:
 					route_tree.append(route)
@@ -217,6 +222,22 @@ class npConfig(object):
 				ifcfg["dhcp4"] = True
 			if opt =="dhcp6":
 				fcfg["dhcp6"] = True
+
+	def __checkFeature(self, feature):
+		"""
+		check if current version of netplan supports default-routes feature
+		"""
+		p = subprocess.Popen("netplan info".split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		out = p.communicate()
+
+		if p.returncode:
+			print("netplan info failed [%d].\nstdout:%s\nstderr:%s\n" %
+				(p.returncode, str(out[0]), str(out[1])))
+			return False
+
+		if feature in str(out[0]):
+			return True
+		return False
 
 	def __restart(self):
 		"""
