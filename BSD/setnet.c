@@ -24,11 +24,16 @@
  * FAKE methods for setting network parameters
  */
 
+#include "rcconf.h"
+#include "exec.h"
 #include "../netinfo.h"
 #include "../namelist.h"
 #include "../common.h"
 #include "../options.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <limits.h>
 #include <errno.h>
 
 int set_ip(struct netinfo *if_it, struct nettool_mac *params)
@@ -53,8 +58,28 @@ int set_search_domain(struct nettool_mac *params)
 
 int set_hostname(struct nettool_mac *params)
 {
-	VARUNUSED(params);
-	return -ENOENT;
+	char cmd[PATH_MAX + 1];
+	size_t len;
+	int res;
+
+	if (params->value == NULL)
+		return 0;
+
+	/* strip trailing dots */
+	len = strlen(params->value);
+	while (len > 0 && params->value[len-1] == '.')
+		params->value[--len] = 0;
+
+	if (snprintf(cmd, PATH_MAX, "hostname %s", params->value) >= PATH_MAX) {
+		werror("ERROR: Command line for execution set_dns.sh is too long");
+		return -1;
+	}
+
+	res = rcconf_save_fields("hostname", params->value, NULL);
+	if (res != 0)
+		return res;
+
+	return run_cmd(cmd);
 }
 
 int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
