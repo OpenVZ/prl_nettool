@@ -38,6 +38,9 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef _BSD_
+#include <limits.h>
+#endif
 #endif
 
 #include "common.h"
