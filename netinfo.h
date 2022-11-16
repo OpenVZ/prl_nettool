@@ -32,6 +32,8 @@
 #include <SystemConfiguration/SCNetworkConfiguration.h>
 #endif
 
+#include <stddef.h>
+
 #define MAC_LENGTH	17 //len of XX:XX:XX:XX:XX:XX
 #define IP_LENGTH	15 //len of XXX.XXX.XXX.XXX
 #define NAME_LENGTH	260
