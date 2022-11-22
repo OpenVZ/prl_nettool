@@ -1,6 +1,5 @@
 ### Compiler flags
 VERSION=$(shell cat Makefile.version)
-CC = gcc
 CFLAGS = $(RPM_OPT_FLAGS) -static -g -Wall -O2 -D_BSD_ -DVERSION=\"$(VERSION)\"
 DESTDIR=
 SBINDIR=$(DESTDIR)/usr/sbin
