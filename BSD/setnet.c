@@ -98,9 +98,32 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 
 int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 {
-	VARUNUSED(if_it);
+	char key_v4[NAME_LENGTH + 10], key_v6[NAME_LENGTH + 15];
+	const char *val_v4, *val_v6;
+	const char cmd[] = "service dhclient restart ";
+	char cmd_buf[sizeof(cmd) + NAME_LENGTH];
+	int res;
+
 	VARUNUSED(params);
-	return -ENOENT;
+
+	snprintf(key_v4, sizeof(key_v4), "ifconfig_%s", if_it->name);
+	snprintf(key_v6, sizeof(key_v6), "ifconfig_%s_ipv6", if_it->name);
+
+	val_v4 = (strchr(params->value, '4')) ? "DHCP" : NULL;
+	val_v6 = (strchr(params->value, '6')) ? "DHCP" : NULL;
+
+	res = rcconf_save_fields(key_v4, val_v4, key_v6, val_v6, "dhcpd_enable", "YES", NULL);
+	if (res != 0)
+		return res;
+
+	snprintf(cmd_buf, sizeof(cmd_buf), "%s%s", cmd, if_it->name);
+
+	res = run_cmd(cmd_buf);
+
+	if_it->configured_with_dhcp = (val_v4) ? 1 : 0;
+	if_it->configured_with_dhcpv6 = (val_v6) ? 1 : 0;
+
+	return res;
 }
 
 int clean(struct netinfo *if_it)

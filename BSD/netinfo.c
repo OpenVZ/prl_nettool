@@ -23,11 +23,71 @@
  *
  */
 
-#include <stddef.h>
 #include "../netinfo.h"
+#include <stddef.h>
 #include <errno.h>
+#include <string.h>
+#include <ifaddrs.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <arpa/inet.h>
+#include <net/if_dl.h>
+#include <net/if_types.h>
+#include <net/ethernet.h>
+
+static struct netinfo *make_netinfo(struct ifaddrs *ifaddrs)
+{
+	struct sockaddr_dl *sdl;
+	struct netinfo *if_info;
+
+	if (ifaddrs->ifa_addr->sa_family != AF_LINK)
+		return NULL;
+
+	sdl = (struct sockaddr_dl *) ifaddrs->ifa_addr;
+
+	switch (sdl->sdl_type) {
+		case IFT_ETHER:
+		case IFT_XETHER:
+		case IFT_PPP:
+			break;
+		default:
+			return NULL;
+	}
+
+	if_info = netinfo_new();
+	if (if_info == NULL)
+		return NULL;
+
+	mac_to_str((unsigned char *)LLADDR(sdl), ETHER_ADDR_LEN,
+			   if_info->mac, MAC_LENGTH + 1);
+
+	strlcpy(if_info->name, ifaddrs->ifa_name, NAME_LENGTH);
+
+	return if_info;
+}
+
+static int get_ifaces(struct netinfo **netinfo_head)
+{
+	struct ifaddrs *ifaddrs;
+	struct netinfo *if_info;
+	int res;
+
+	res = getifaddrs(&ifaddrs);
+	if (res != 0) {
+		return res;
+	}
+
+	while (ifaddrs) {
+		if_info = make_netinfo(ifaddrs);
+		if (if_info != NULL)
+			netinfo_add(if_info, netinfo_head);
+		ifaddrs = ifaddrs->ifa_next;
+	}
+	return 0;
+}
 
 int get_device_list(struct netinfo **netinfo_head)
 {
-	return -ENOENT;
+	get_ifaces(netinfo_head);
+	return 0;
 }
