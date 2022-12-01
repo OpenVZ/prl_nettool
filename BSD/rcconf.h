@@ -41,8 +41,13 @@ struct rcconf {
 /* You can call this function with any number of key/val. You must
  * terminate argumnets with NULL. There should be an even number of
  * arguments, excluding terminating NULL.
+ * Also you can remove some fields by setting NULL for val argument.
+ * Note that you must add teminating NULL in any case.
  *
- * Example: rcconf_save_fields("key1", "val1, "key2", "val2, NULL);
+ * Example:
+ *     rcconf_save_fields("/etc/rc.conf", "header",
+ *                        "key1", "val1, "key2", "val2", "rm_key3", NULL, NULL);
+ *                        |_______ add key/val _______|  |__rm key/val_|  |_teminator
  */
 extern int rcconf_save_fields(const char *key, const char *val, ...);
 
