@@ -35,12 +35,35 @@
 #include <string.h>
 #include <limits.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 {
-	VARUNUSED(if_it);
-	VARUNUSED(params);
-	return -ENOENT;
+	const char key_tmpl[] = "ifconfig_%s";
+	const char val_tmpl[] = "inet %s";
+	const char cmd_tmpl[] = "ifconfig %s inet %s";
+
+	char key[sizeof(key_tmpl) + NAME_LENGTH];
+	char buf[sizeof(cmd_tmpl) + NAME_LENGTH + INET6_ADDRSTRLEN];
+	int res;
+
+	if (snprintf(key, sizeof(key), key_tmpl, if_it->name) >= sizeof(key))
+		return -EINVAL;
+
+	if (snprintf(buf, sizeof(buf), val_tmpl, params->value) >= sizeof(buf))
+		return -EINVAL;
+
+	res = rcconf_save_fields(key, buf, NULL);
+	if (res != 0)
+		return res;
+
+	res = snprintf(buf, sizeof(buf), cmd_tmpl, if_it->name, params->value);
+	if (res>= sizeof(buf))
+		return -EINVAL;
+
+	if_it->configured_with_dhcp = 0;
+
+	return run_cmd(buf);
 }
 
 int set_dns(struct netinfo *if_it, struct nettool_mac *params)
