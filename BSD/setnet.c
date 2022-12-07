@@ -105,11 +105,58 @@ int set_hostname(struct nettool_mac *params)
 	return run_cmd(cmd);
 }
 
+
 int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 {
-	VARUNUSED(if_it);
-	VARUNUSED(params);
-	return -ENOENT;
+	struct namelist *gws = NULL, *gw;
+	const char *key, *val;
+	char cmd[PATH_MAX+1];
+	int res = 0;
+
+	if (if_it->configured_with_dhcp && if_it->configured_with_dhcpv6) {
+		error(0, "WARNING: configured with dhcp. don't change");
+		return 0;
+	}
+
+	namelist_split(&gws, params->value);
+	gw = gws;
+	while(gw) {
+		key = NULL;
+		val = NULL;
+
+		if (is_ipv6(gw->name) ||
+			!strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
+			snprintf(cmd, PATH_MAX, "route -6 del default; ");
+
+			if (strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
+				snprintf(cmd, PATH_MAX, "%s route -6 add default %s -ifp %s",
+						 cmd, gw->name, if_it->name);
+				val = gw->name;
+			}
+			key = "ipv6_defaultrouter";
+		} else {
+			snprintf(cmd, PATH_MAX, "route del default; ");
+
+			if (strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE))) {
+				snprintf(cmd, PATH_MAX, "%s route add default %s -ifp %s",
+						 cmd, gw->name, if_it->name);
+				val = gw->name;
+			}
+			key = "defaultrouter";
+		}
+		res = run_cmd(cmd);
+		if (res != 0)
+			return res;
+
+		res = rcconf_save_fields(key, val, NULL);
+		if (res != 0)
+			return res;
+
+		gw = gw->next;
+	}
+	namelist_clean(&gws);
+
+	return res;
 }
 
 int set_route(struct netinfo *if_it, struct nettool_mac *params)
