@@ -378,5 +378,5 @@ static void strip(char *str)
 
 static bool is_space(char c)
 {
-	return (c == ' ' || c == '\t' || c == '\n');
+	return (c == ' ' || c == '\t' || c == '\n' || c == '\0');
 }
