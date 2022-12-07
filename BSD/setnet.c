@@ -124,11 +124,10 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 		key = NULL;
 		val = NULL;
 
-		if (is_ipv6(gw->name) ||
-			!strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
+		if (is_ipv6(gw->name) || is_removev6(gw->name)) {
 			snprintf(cmd, PATH_MAX, "route -6 del default; ");
 
-			if (strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
+			if (!is_removev6(gw->name)) {
 				snprintf(cmd, PATH_MAX, "%s route -6 add default %s -ifp %s",
 						 cmd, gw->name, if_it->name);
 				val = gw->name;
@@ -137,7 +136,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 		} else {
 			snprintf(cmd, PATH_MAX, "route del default; ");
 
-			if (strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE))) {
+			if (!is_remove(gw->name)) {
 				snprintf(cmd, PATH_MAX, "%s route add default %s -ifp %s",
 						 cmd, gw->name, if_it->name);
 				val = gw->name;

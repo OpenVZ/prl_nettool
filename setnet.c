@@ -336,8 +336,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 	gw = gws;
 	while (gw)
 	{
-		if (is_ipv6(gw->name) ||
-				!strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6)))
+		if (is_ipv6(gw->name) || is_removev6(gw->name))
 			sprintf(str, "interface ipv6 del route ::/0 %d", if_it->idx);
 		else
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
@@ -347,9 +346,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 #endif
 		exec_netsh(str);
 
-		if (strlen(gw->name) > 0 &&
-			strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE)) &&
-			strncmp(gw->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6))) {
+		if (strlen(gw->name) > 0 && (!is_remove(gw->name)) && (!is_removev6(gw->name))) {
 			if (is_ipv6(gw->name))
 				sprintf(str, "interface ipv6 add route ::/0 %d %s store=persistent",
 							if_it->idx, gw->name);
@@ -917,7 +914,7 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 	gw = gws;
 	while (gw)
 	{
-		if (!strncmp(gw->name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE)))
+		if (is_remove(gw->name))
 		{
 #if (NTDDI_VERSION < NTDDI_LONGHORN)
 			rc = remove_route_xp();

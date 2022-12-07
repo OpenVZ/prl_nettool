@@ -236,8 +236,7 @@ int is_ipv6_value(char *str)
 	value = values;
 	while(value)
 	{
-		if (is_ipv6(value->name) ||
-			strncmp(value->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6)) == 0)
+		if (is_ipv6(value->name) || is_removev6(value->name))
 		{
 			error(0, "Value '%s' is ipv6. Not supported by OS.", value->name);
 			namelist_clean(&values);
@@ -265,8 +264,7 @@ char *clean_ipv6_value(char *str)
 	value = values;
 	while(value)
 	{
-		if (!is_ipv6(value->name) && \
-			strncmp(value->name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6)) != 0)
+		if ((!is_ipv6(value->name)) && (!is_removev6(value->name)))
 		{
 			namelist_add(value->name, &clean_values);
 		}

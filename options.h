@@ -98,5 +98,15 @@ int is_opt_set(unsigned int opt);
 
 void parse_options(char **argv);
 
+int static inline is_remove(const char *name)
+{
+	return (strncmp(name, NET_STR_OPT_REMOVE, strlen(NET_STR_OPT_REMOVE)) == 0);
+}
+
+int static inline is_removev6(const char *name)
+{
+	return (strncmp(name, NET_STR_OPT_REMOVEV6, strlen(NET_STR_OPT_REMOVEV6)) == 0);
+}
+
 
 #endif // __OPTIONS_H__
