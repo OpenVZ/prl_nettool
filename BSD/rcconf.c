@@ -275,7 +275,7 @@ struct rcconf_item *rcconf_make_item(const char *key, const char *val)
 
 	item = malloc(sizeof(*item));
 	if (!item) {
-		errno = -ENOMEM;
+		errno = ENOMEM;
 		return NULL;
 	}
 
@@ -285,7 +285,7 @@ struct rcconf_item *rcconf_make_item(const char *key, const char *val)
 
 	if ((!item->key) || (!item->val)) {
 		rcconf_free_item(item);
-		errno = -ENOMEM;
+		errno = ENOMEM;
 		return NULL;
 	}
 
