@@ -24,42 +24,42 @@
 #ifndef __RCCONF_H__
 #define __RCCONF_H__
 
-struct rcconf_field {
+struct rcconf_item {
     char *key;
     char *val;
-    struct rcconf_field *next;
-    struct rcconf_field *prev;
+    struct rcconf_item *next;
+    struct rcconf_item *prev;
 };
 
 struct rcconf {
-    struct rcconf_field fields;
+    struct rcconf_item items;
 };
 
-#define RC_CONF_FOREACH_FIELD(cfg, field) \
-    for (field = (cfg)->fields.next; (field) != &(cfg)->fields; field = (field)->next)
+#define RC_CONF_FOREACH_FIELD(cfg, item) \
+    for (item = (cfg)->items.next; (item) != &(cfg)->items; item = (item)->next)
 
 /* You can call this function with any number of key/val. You must
  * terminate argumnets with NULL. There should be an even number of
  * arguments, excluding terminating NULL.
- * Also you can remove some fields by setting NULL for val argument.
+ * Also you can remove some items by setting NULL for val argument.
  * Note that you must add teminating NULL in any case.
  *
  * Example:
- *     rcconf_save_fields("/etc/rc.conf", "header",
+ *     rcconf_save_items("/etc/rc.conf", "header",
  *                        "key1", "val1, "key2", "val2", "rm_key3", NULL, NULL);
  *                        |_______ add key/val _______|  |__rm key/val_|  |_teminator
  */
-extern int rcconf_save_fields(const char *key, const char *val, ...);
+extern int rcconf_save_items(const char *key, const char *val, ...);
 
 extern void rcconf_init(struct rcconf *cfg);
 extern void rcconf_free(struct rcconf *cfg);
 extern int rcconf_load(struct rcconf *cfg);
 extern int rcconf_save(struct rcconf *cfg);
-extern struct rcconf_field *rcconf_get_field(struct rcconf *cfg, const char *key);
-extern int rcconf_set_field(struct rcconf *cfg, const char *key, const char *val);
-extern int rcconf_del_field(struct rcconf *cfg, const char *key);
-extern int rcconf_add_field(struct rcconf *cfg, struct rcconf_field *field);
-extern struct rcconf_field *rcconf_make_field(const char *key, const char *val);
-extern void rcconf_free_field(struct rcconf_field *field);
+extern struct rcconf_item *rcconf_get_item(struct rcconf *cfg, const char *key);
+extern int rcconf_set_item(struct rcconf *cfg, const char *key, const char *val);
+extern int rcconf_del_item(struct rcconf *cfg, const char *key);
+extern int rcconf_add_item(struct rcconf *cfg, struct rcconf_item *item);
+extern struct rcconf_item *rcconf_make_item(const char *key, const char *val);
+extern void rcconf_free_item(struct rcconf_item *item);
 
 #endif

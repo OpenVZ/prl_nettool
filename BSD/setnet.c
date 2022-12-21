@@ -53,7 +53,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 	if (snprintf(buf, sizeof(buf), val_tmpl, params->value) >= sizeof(buf))
 		return -EINVAL;
 
-	res = rcconf_save_fields(key, buf, NULL);
+	res = rcconf_save_items(key, buf, NULL);
 	if (res != 0)
 		return res;
 
@@ -98,7 +98,7 @@ int set_hostname(struct nettool_mac *params)
 		return -1;
 	}
 
-	res = rcconf_save_fields("hostname", params->value, NULL);
+	res = rcconf_save_items("hostname", params->value, NULL);
 	if (res != 0)
 		return res;
 
@@ -147,7 +147,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 		if (res != 0)
 			return res;
 
-		res = rcconf_save_fields(key, val, NULL);
+		res = rcconf_save_items(key, val, NULL);
 		if (res != 0)
 			return res;
 
@@ -181,7 +181,7 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 	val_v4 = (strchr(params->value, '4')) ? "DHCP" : NULL;
 	val_v6 = (strchr(params->value, '6')) ? "DHCP" : NULL;
 
-	res = rcconf_save_fields(key_v4, val_v4, key_v6, val_v6, "dhcpd_enable", "YES", NULL);
+	res = rcconf_save_items(key_v4, val_v4, key_v6, val_v6, "dhcpd_enable", "YES", NULL);
 	if (res != 0)
 		return res;
 
