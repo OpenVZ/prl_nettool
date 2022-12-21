@@ -103,26 +103,25 @@ void rcconf_init(struct rcconf *cfg)
 	if (!cfg) {
 		return;
 	}
-	cfg->items.next = &cfg->items;
-	cfg->items.prev = &cfg->items;
+	rcconf_list_init(&cfg->list);
 }
 
 void rcconf_free(struct rcconf *cfg)
 {
-	struct rcconf_item *item, *next;
+	struct rcconf_list *list, *item, *next;
 
 	if (!cfg) {
 		return;
 	}
 
+	list = &cfg->list;
 	next = NULL;
-	for (item = cfg->items.next; item != &cfg->items; item = next) {
+	for (item = list->next; item != list; item = next) {
 		next = item->next;
-		rcconf_free_item(item);
+		rcconf_free_item(container_of(item, struct rcconf_item, list));
 	}
 
-	cfg->items.prev = &cfg->items;
-	cfg->items.next = &cfg->items;
+	rcconf_list_init(list);
 }
 
 int rcconf_load(struct rcconf *cfg)
@@ -156,6 +155,7 @@ int rcconf_load(struct rcconf *cfg)
 int rcconf_save(struct rcconf *cfg)
 {
 	FILE *fp;
+	struct rcconf_list *list_item;
 	struct rcconf_item *item;
 	int res;
 
@@ -173,7 +173,8 @@ int rcconf_save(struct rcconf *cfg)
 
 	fprintf(fp, "%s\n", PRL_HEADER);
 
-	RC_CONF_FOREACH_FIELD(cfg, item) {
+	rcconf_list_foreach(&cfg->list, list_item) {
+		item = container_of(list_item, struct rcconf_item, list);
 		fprintf(fp, "%s=\"%s\"\n", item->key, item->val);
 	}
 	fclose(fp);
@@ -183,13 +184,15 @@ int rcconf_save(struct rcconf *cfg)
 
 struct rcconf_item *rcconf_get_item(struct rcconf *cfg, const char *key)
 {
+	struct rcconf_list *list_item;
 	struct rcconf_item *item;
 
 	if ((!cfg) || (!key)) {
 		return NULL;
 	}
 
-	RC_CONF_FOREACH_FIELD(cfg, item) {
+	rcconf_list_foreach(&cfg->list, list_item) {
+		item = container_of(list_item, struct rcconf_item, list);
 		if (strcmp(item->key, key) == 0) {
 			return item;
 		}
@@ -240,8 +243,8 @@ int rcconf_del_item(struct rcconf *cfg, const char *key)
 		return -ENOENT;
 	}
 
-	item->next->prev = item->prev;
-	item->prev->next = item->next;
+	rcconf_list_del(&item->list);
+
 	return 0;
 }
 
@@ -258,11 +261,7 @@ int rcconf_add_item(struct rcconf *cfg, struct rcconf_item *item)
 		return -EEXIST;
 	}
 
-	item->prev = cfg->items.prev;
-	item->next = &cfg->items;
-	cfg->items.prev->next = item;
-	cfg->items.prev = item;
-
+	rcconf_list_append(&cfg->list, &item->list);
 	return 0;
 }
 
@@ -280,7 +279,7 @@ struct rcconf_item *rcconf_make_item(const char *key, const char *val)
 		return NULL;
 	}
 
-	item->next = NULL;
+	rcconf_list_init(&item->list);
 	item->key = strdup(key);
 	item->val = strdup(val);
 

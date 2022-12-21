@@ -24,19 +24,17 @@
 #ifndef __RCCONF_H__
 #define __RCCONF_H__
 
+#include "rcconf_list.h"
+
 struct rcconf_item {
     char *key;
     char *val;
-    struct rcconf_item *next;
-    struct rcconf_item *prev;
+	struct rcconf_list list;
 };
 
 struct rcconf {
-    struct rcconf_item items;
+	struct rcconf_list list;
 };
-
-#define RC_CONF_FOREACH_FIELD(cfg, item) \
-    for (item = (cfg)->items.next; (item) != &(cfg)->items; item = (item)->next)
 
 /* You can call this function with any number of key/val. You must
  * terminate argumnets with NULL. There should be an even number of
