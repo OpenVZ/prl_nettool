@@ -25,6 +25,7 @@
  */
 
 #include "rcconf.h"
+#include "rcconf_sublist.h"
 #include "exec.h"
 #include "../netinfo.h"
 #include "../namelist.h"
@@ -160,9 +161,71 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 
 int set_route(struct netinfo *if_it, struct nettool_mac *params)
 {
-	VARUNUSED(if_it);
-	VARUNUSED(params);
-	return -ENOENT;
+	struct namelist *gws = NULL, *gw;
+	struct rcconf cfg;
+	struct rcconf_sublist sublist;
+	const char *ipv = NULL, *gw_ip, *if_arg;
+	char cmd[PATH_MAX+1];
+	int res = 0;
+
+	if (if_it->configured_with_dhcp && if_it->configured_with_dhcpv6) {
+		error(0, "WARNING: configured with dhcp. don't change");
+		return 0;
+	}
+
+	rcconf_init(&cfg);
+
+	res = rcconf_load(&cfg);
+	if (res != 0) {
+		return res;
+	}
+
+	rcconf_sublist_init(&sublist, "static_routes", "route_", "prl");
+	rcconf_sublist_load(&sublist, &cfg);
+
+	namelist_split(&gws, params->value);
+	gw = gws;
+	while(gw) {
+		struct route route = {NULL, NULL, NULL};
+
+		parse_route(gw->name, &route);
+
+		ipv = (is_ipv6(gw->name)) ? "-6" : "-4";
+		if (route.gw) {
+			gw_ip = route.gw;
+			if_arg = "-ifp";
+		} else {
+			gw_ip = "";
+			if_arg = "-interface";
+		}
+
+		snprintf(cmd, PATH_MAX, "route del %s %s;"
+				"route add %s %s %s %s %s",
+				ipv, route.ip,
+				ipv, route.ip, gw_ip, if_arg, if_it->name);
+		res = run_cmd(cmd);
+		if (res != 0) {
+			goto end;
+		}
+
+		snprintf(cmd, PATH_MAX, "%s %s %s %s %s",
+				 ipv, route.ip, gw_ip, if_arg, if_it->name);
+
+		rcconf_sublist_set(&sublist, cmd);
+
+		clear_route(&route);
+		gw = gw->next;
+	}
+	namelist_clean(&gws);
+
+	rcconf_sublist_save(&sublist, &cfg);
+	rcconf_save(&cfg);
+
+end:
+	rcconf_sublist_free(&sublist);
+	rcconf_free(&cfg);
+
+	return res;
 }
 
 int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
