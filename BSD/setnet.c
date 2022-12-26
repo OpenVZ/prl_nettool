@@ -69,9 +69,30 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 
 int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 {
-	VARUNUSED(if_it);
-	VARUNUSED(params);
-	return -ENOENT;
+	const char cmd_tmpl[] = "resolvconf -a %s";
+	char cmd[sizeof(cmd_tmpl) + INET6_ADDRSTRLEN];
+	FILE *f;
+	int res;
+
+	if (params->value == NULL)
+		return 0;
+
+	if (snprintf(cmd, sizeof(cmd), cmd_tmpl, if_it->name) >= sizeof(cmd))
+		return -EINVAL;
+
+	f = popen(cmd, "w");
+	if (f == NULL) {
+		werror("ERROR: Can't execute resolvconf");
+		return -errno;
+	}
+
+	fprintf(f, "nameserver %s", params->value);
+
+	res = pclose(f);
+	if (res != 0)
+		werror("ERROR: Resolvconf returned %d", res);
+
+	return res;
 }
 
 int set_search_domain(struct nettool_mac *params)
