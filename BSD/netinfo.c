@@ -24,6 +24,9 @@
  */
 
 #include "../netinfo.h"
+#include "../namelist.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <errno.h>
 #include <string.h>
@@ -86,8 +89,39 @@ static int get_ifaces(struct netinfo **netinfo_head)
 	return 0;
 }
 
+void read_dns(struct netinfo **netinfo_head)
+{
+	struct netinfo *ifinfo = NULL;
+	char *line = NULL;
+	char dns[INET6_ADDRSTRLEN + 1];
+	char ifname[NAME_LENGTH + 1];
+	size_t len = 0;
+	FILE *f;
+
+	f = popen("resolvconf -l", "r");
+	if (f == NULL)
+		return;
+
+	while (getline(&line, &len, f) >= 0) {
+		/* 260 - NAME_LENGTH */
+		if (sscanf(line, "# resolv.conf from %260s", ifname) == 1) {
+			ifinfo = netinfo_search_name(netinfo_head, ifname);
+			continue;
+		}
+
+		/* 46 - INET6_ADDRSTRLEN */
+		if (sscanf(line, "nameserver %46s", dns) != 1)
+			continue;
+
+		if (ifinfo)
+			namelist_add(dns, &ifinfo->dns);
+	}
+	pclose(f);
+}
+
 int get_device_list(struct netinfo **netinfo_head)
 {
 	get_ifaces(netinfo_head);
+	read_dns(netinfo_head);
 	return 0;
 }
