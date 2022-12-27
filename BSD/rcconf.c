@@ -22,75 +22,64 @@
  */
 
 #include "rcconf.h"
-#include "../common.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdarg.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdarg.h>
 #include <errno.h>
 #include <sys/types.h>
 
-#define RC_PATH		"/etc/rc.conf"
-#define RC_PRL_PATH	"/etc/rc.prl_nettool"
 
-#define RC_HEADER_FIRST	"### The section below was created automatically by prl_nettool. ###\n"
-#define RC_HEADER_REST	"### Don't change any line of the section and don't put any      ###\n" \
-						"### variables below the section.                                ###\n"
-#define RC_BODY			"if [ -r " RC_PRL_PATH     " ]; then                             ###\n" \
-						"    . "   RC_PRL_PATH   "                                       ###\n" \
-						"fi                                                              ###\n"
-#define RC_END			"###################################################################\n"
-
-#define PRL_HEADER	"### This file was created automatically by prl_nettool. ###\n" \
-					"### Don't change any line of the file.                  ###\n"
-
-static int handle_rc_conf(void);
 static struct rcconf_item *parse_line(char *line);
 static void strip(char *str);
 static bool is_space(char c);
 
-int rcconf_save_items(const char *key, const char *val, ...)
+
+int rcconf_save_items(const char *path, const char *header, ...)
 {
 	struct rcconf cfg;
 	va_list args;
+	const char *key, *val;
 	int res;
+
+	if (!path) {
+		return -EINVAL;
+	}
 
 	rcconf_init(&cfg);
 
-	res = rcconf_load(&cfg);
+	res = rcconf_load(&cfg, path);
 	if (res != 0) {
-		werror("ERROR: Can't load");
 		return res;
 	}
 
-	va_start(args, val);
+	va_start(args, header);
 
-	while (key != NULL) {
+	do {
+		key = va_arg(args, const char *);
+		if (key == NULL) {
+			break;
+		}
+
+		val = va_arg(args, const char *);
 		if (val == NULL) {
 			res = rcconf_del_item(&cfg, key);
 			if (res != 0 && res != -ENOENT) {
-				werror("ERROR: Can't remove %s item", key);
 				goto err;
 			}
 		} else {
 			res = rcconf_set_item(&cfg, key, val);
 			if (res != 0) {
-				werror("ERROR: Can't set %s item", key);
 				goto err;
 			}
 		}
 
-		key = va_arg(args, const char *);
-		if (key != NULL)
-			val = va_arg(args, const char *);
-	}
+	} while (key != NULL);
 
 	va_end(args);
 
-	res = rcconf_save(&cfg);
-	if (res != 0)
-		werror("ERROR: Can't save to rc.conf");
+	res = rcconf_save(&cfg, path, header);
 
 err:
 	rcconf_free(&cfg);
@@ -124,7 +113,7 @@ void rcconf_free(struct rcconf *cfg)
 	rcconf_list_init(list);
 }
 
-int rcconf_load(struct rcconf *cfg)
+int rcconf_load(struct rcconf *cfg, const char *path)
 {
 	FILE *fp;
 	char *line = NULL;
@@ -132,15 +121,15 @@ int rcconf_load(struct rcconf *cfg)
 	ssize_t read;
 	struct rcconf_item *item;
 
-	if (!cfg) {
+	if ((!cfg) || (!path)) {
 		return -EINVAL;
 	}
 
 	rcconf_free(cfg);
 
-	fp = fopen(RC_PRL_PATH, "r");
+	fp = fopen(path, "r");
 	if (!fp)
-		return 0; /* If there is no config file, assume the config is empty */
+		return -errno;
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		item = parse_line(line);
@@ -152,26 +141,23 @@ int rcconf_load(struct rcconf *cfg)
 	return 0;
 }
 
-int rcconf_save(struct rcconf *cfg)
+int rcconf_save(struct rcconf *cfg, const char *path, const char *header)
 {
-	FILE *fp;
 	struct rcconf_list *list_item;
 	struct rcconf_item *item;
-	int res;
+	FILE *fp;
 
-	if (!cfg) {
+	if ((!cfg) || (!path)) {
 		return -EINVAL;
 	}
 
-	res = handle_rc_conf();
-	if (res != 0)
-		return res;
-
-	fp = fopen(RC_PRL_PATH, "w+");
+	fp = fopen(path, "w+");
 	if (!fp)
 		return -errno;
 
-	fprintf(fp, "%s\n", PRL_HEADER);
+	if (header) {
+		fprintf(fp, "%s\n", header);
+	}
 
 	rcconf_list_foreach(&cfg->list, list_item) {
 		item = container_of(list_item, struct rcconf_item, list);
@@ -181,6 +167,7 @@ int rcconf_save(struct rcconf *cfg)
 
 	return 0;
 }
+
 
 struct rcconf_item *rcconf_get_item(struct rcconf *cfg, const char *key)
 {
@@ -300,32 +287,6 @@ void rcconf_free_item(struct rcconf_item *item)
 	free(item->key);
 	free(item->val);
 	free(item);
-}
-
-static int handle_rc_conf(void)
-{
-	FILE *fp;
-	char *line = NULL;
-	size_t len = 0;
-	ssize_t read;
-
-	fp = fopen(RC_PATH, "r+");
-	if (!fp) {
-		return -errno;
-	}
-
-	while ((read = getline(&line, &len, fp)) != -1) {
-		if (strcmp(line, RC_HEADER_FIRST) == 0) {
-			fclose(fp);
-			return 0;
-		}
-	}
-
-	fprintf(fp, "\n%s%s", RC_HEADER_FIRST, RC_HEADER_REST);
-	fprintf(fp, "%s%s", RC_BODY, RC_END);
-
-	fclose(fp);
-	return 0;
 }
 
 static struct rcconf_item *parse_line(char *line)

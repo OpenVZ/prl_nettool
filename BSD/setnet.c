@@ -24,8 +24,7 @@
  * FAKE methods for setting network parameters
  */
 
-#include "rcconf.h"
-#include "rcconf_sublist.h"
+#include "rcprl.h"
 #include "exec.h"
 #include "../netinfo.h"
 #include "../namelist.h"
@@ -54,7 +53,7 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 	if (snprintf(buf, sizeof(buf), val_tmpl, params->value) >= sizeof(buf))
 		return -EINVAL;
 
-	res = rcconf_save_items(key, buf, NULL);
+	res = rcprl_save_items(key, buf, NULL);
 	if (res != 0)
 		return res;
 
@@ -120,7 +119,7 @@ int set_hostname(struct nettool_mac *params)
 		return -1;
 	}
 
-	res = rcconf_save_items("hostname", params->value, NULL);
+	res = rcprl_save_items("hostname", params->value, NULL);
 	if (res != 0)
 		return res;
 
@@ -169,7 +168,7 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 		if (res != 0)
 			return res;
 
-		res = rcconf_save_items(key, val, NULL);
+		res = rcprl_save_items(key, val, NULL);
 		if (res != 0)
 			return res;
 
@@ -183,7 +182,6 @@ int set_gateway(struct netinfo *if_it, struct nettool_mac *params)
 int set_route(struct netinfo *if_it, struct nettool_mac *params)
 {
 	struct namelist *gws = NULL, *gw;
-	struct rcconf cfg;
 	struct rcconf_sublist sublist;
 	const char *ipv = NULL, *gw_ip, *if_arg;
 	char cmd[PATH_MAX+1];
@@ -194,15 +192,15 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 		return 0;
 	}
 
-	rcconf_init(&cfg);
+	rcprl_init();
 
-	res = rcconf_load(&cfg);
+	res = rcprl_load();
 	if (res != 0) {
 		return res;
 	}
 
 	rcconf_sublist_init(&sublist, "static_routes", "route_", "prl");
-	rcconf_sublist_load(&sublist, &cfg);
+	rcprl_sublist_load(&sublist);
 
 	namelist_split(&gws, params->value);
 	gw = gws;
@@ -239,12 +237,12 @@ int set_route(struct netinfo *if_it, struct nettool_mac *params)
 	}
 	namelist_clean(&gws);
 
-	rcconf_sublist_save(&sublist, &cfg);
-	rcconf_save(&cfg);
+	rcprl_sublist_save(&sublist);
+	rcprl_save();
 
 end:
 	rcconf_sublist_free(&sublist);
-	rcconf_free(&cfg);
+	rcprl_free();
 
 	return res;
 }
@@ -265,7 +263,7 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 	val_v4 = (strchr(params->value, '4')) ? "DHCP" : NULL;
 	val_v6 = (strchr(params->value, '6')) ? "DHCP" : NULL;
 
-	res = rcconf_save_items(key_v4, val_v4, key_v6, val_v6, "dhcpd_enable", "YES", NULL);
+	res = rcprl_save_items(key_v4, val_v4, key_v6, val_v6, "dhcpd_enable", "YES", NULL);
 	if (res != 0)
 		return res;
 
