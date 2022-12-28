@@ -27,6 +27,7 @@
 #include "rcconf.h"
 #include "rcconf_sublist.h"
 
+#define RC_PATH		"/etc/rc.conf"
 #define RCPRL_PATH	"/etc/rc.prl_nettool"
 
 #define RCPRL_HEADER	"### This file was created automatically by prl_nettool. ###\n" \
@@ -40,5 +41,6 @@ extern int rcprl_load(void);
 extern int rcprl_save(void);
 extern int rcprl_sublist_load(struct rcconf_sublist *sublist);
 extern int rcprl_sublist_save(struct rcconf_sublist *sublist);
+extern struct rcconf_item *rcprl_get_item(const char *key);
 
 #endif

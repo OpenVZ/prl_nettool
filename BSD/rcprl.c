@@ -26,8 +26,6 @@
 #include <string.h>
 #include <errno.h>
 
-#define RC_PATH		"/etc/rc.conf"
-
 #define RC_HEADER_FIRST	"### The section below was created automatically by prl_nettool. ###\n"
 #define RC_HEADER_REST	"### Don't change any line of the section and don't put any      ###\n" \
 						"### variables below the section.                                ###\n"
@@ -79,6 +77,11 @@ int rcprl_load(void)
 int rcprl_save(void)
 {
 	return rcconf_save(&cfg, RCPRL_PATH, RCPRL_HEADER);
+}
+
+struct rcconf_item *rcprl_get_item(const char *key)
+{
+	return rcconf_get_item(&cfg, key);
 }
 
 int rcprl_sublist_load(struct rcconf_sublist *sublist)
