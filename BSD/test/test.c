@@ -6,8 +6,8 @@
 #include <errno.h>
 
 #define CHEAT_NO_MATH
-#include <cheat.h>
-#include <cheats.h>
+#include "cheat.h"
+#include "cheats.h"
 
 
 CHEAT_DECLARE(
