@@ -11,7 +11,7 @@
 
 
 CHEAT_DECLARE(
-	#define TMP_PATH        "build/tmp"
+	#define TMP_PATH        "tmp"
 	#define RCCONF_PATH     TMP_PATH "/test_rc.conf"
 	#define RCCONF_OUT_PATH TMP_PATH "/test_rc_out.conf"
 	#define INCORRECT_PATH  TMP_PATH "/test_rc_incorrect.conf"
