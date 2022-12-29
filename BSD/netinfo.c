@@ -39,6 +39,8 @@
 #include <net/if_types.h>
 #include <net/ethernet.h>
 
+#define BRIDGE_PREFIX "bridge"
+
 static struct netinfo *make_netinfo(struct ifaddrs *ifaddrs)
 {
 	struct sockaddr_dl *sdl;
@@ -60,6 +62,10 @@ static struct netinfo *make_netinfo(struct ifaddrs *ifaddrs)
 
 	if_info = netinfo_new();
 	if (if_info == NULL)
+		return NULL;
+
+	/* Skip bridges */
+	if (strncmp(if_info->name, BRIDGE_PREFIX, sizeof(BRIDGE_PREFIX) - 1) == 0)
 		return NULL;
 
 	mac_to_str((unsigned char *)LLADDR(sdl), ETHER_ADDR_LEN,
