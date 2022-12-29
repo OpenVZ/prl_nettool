@@ -23,6 +23,7 @@
  *
  */
 
+#include "rcprl.h"
 #include "../netinfo.h"
 #include "../namelist.h"
 #include <stdio.h>
@@ -89,6 +90,75 @@ static int get_ifaces(struct netinfo **netinfo_head)
 	return 0;
 }
 
+static int check_dhcp_item(struct rcconf_item *item)
+{
+	const char *vals[] = {
+		"DHCP",
+		"SYNCDHCP",
+		"NOSYNCDHCP",
+		NULL
+	};
+	const char **p;
+
+	if ((!item) || (!item->val))
+		return 0;
+
+	for (p = vals; *p; p++) {
+		if (strcmp(item->val, *p) == 0)
+			return 1;
+	}
+
+	return 0;
+}
+
+static int check_dhcp(struct rcconf *rcmain, const char *key)
+{
+	struct rcconf_item *item;
+
+	item = rcprl_get_item(key);
+	if (check_dhcp_item(item))
+		return 1;
+
+	item = rcconf_get_item(rcmain, key);
+	return check_dhcp_item(item);
+}
+
+void read_dhcp(struct netinfo **netinfo_head)
+{
+	const char *tmpl_v4 = "ifconfig_%s";
+	const char *tmpl_v6 = "ifconfig_%s_ipv6";
+	char key_v4[NAME_LENGTH + sizeof(tmpl_v4)];
+	char key_v6[NAME_LENGTH + sizeof(tmpl_v6)];
+	struct netinfo *info;
+	struct rcconf rcmain;
+
+	rcprl_init();
+	if (rcprl_load() != 0)
+		return;
+
+	rcconf_init(&rcmain);
+	if (rcconf_load(&rcmain, RC_PATH) != 0)
+		goto err;
+
+	info = netinfo_get_first(netinfo_head);
+	while(info && strlen(info->mac)) {
+		if (snprintf(key_v4, sizeof(key_v4), tmpl_v4, info->name) >= sizeof(key_v4))
+			goto err;
+
+		if (snprintf(key_v6, sizeof(key_v6), tmpl_v6, info->name) >= sizeof(key_v6))
+			goto err;
+
+		info->configured_with_dhcp = check_dhcp(&rcmain, key_v4);
+		info->configured_with_dhcpv6 = check_dhcp(&rcmain, key_v6);
+
+		info = info->next;
+	}
+
+err:
+	rcconf_free(&rcmain);
+	rcprl_free();
+}
+
 void read_dns(struct netinfo **netinfo_head)
 {
 	struct netinfo *ifinfo = NULL;
@@ -122,6 +192,7 @@ void read_dns(struct netinfo **netinfo_head)
 int get_device_list(struct netinfo **netinfo_head)
 {
 	get_ifaces(netinfo_head);
+	read_dhcp(netinfo_head);
 	read_dns(netinfo_head);
 	return 0;
 }
