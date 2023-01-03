@@ -10,7 +10,7 @@ CLOUDINITDIR=$(DESTDIR)/etc/cloud/cloud.cfg.d
 
 all: prl_nettool
 
-prl_nettool: Linux/detection.o Linux/exec.o Linux/netinfo.o Linux/setnet.o namelist.o common.o netinfo_common.o options.o nettool.o
+prl_nettool: Linux/detection.o Linux/exec.o Linux/netinfo.o Linux/setnet.o namelist.o common.o netinfo_common.o options.o nettool.o posix_dns.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 .c.o:

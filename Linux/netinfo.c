@@ -40,6 +40,7 @@
 #include <arpa/nameser.h>
 #include <resolv.h>
 
+#include "../posix_dns.h"
 #include "../netinfo.h"
 #include "../namelist.h"
 #include <libnetlink.h>
@@ -437,65 +438,6 @@ out2:
 
 	goto out;
 }
-
-
-
-void read_dns(struct netinfo **netinfo_head){
-	int i;
-
-	if( res_init() != 0 )
-		return;
-
-	res_state resState = __res_state();
-	for( i = 0; i<resState->nscount; ++i ) {
-		char buf[100];
-		if( resState->nsaddr_list[i].sin_family != AF_INET
-			&& resState->nsaddr_list[i].sin_family != AF_INET6 )
-			continue;
-
-		unsigned int addr = resState->nsaddr_list[i].sin_addr.s_addr;
-		inet_ntop( resState->nsaddr_list[i].sin_family,
-						&addr, buf, sizeof(buf));
-
-		struct netinfo *it = netinfo_get_first(netinfo_head);
-		while (it != NULL){
-			namelist_add(buf, &it->dns);
-			it= it->next;
-		}
-	}
-
-	for( i = 0; i< MAXNS; i++ ) {
-		char buf[100];
-		struct sockaddr_in6 *addr = resState->_u._ext.nsaddrs[i];
-		if (addr == NULL)
-			continue;
-		if( addr->sin6_family != AF_INET
-			&& addr->sin6_family != AF_INET6 )
-			continue;
-
-		inet_ntop( addr->sin6_family, &(addr->sin6_addr), buf, sizeof(buf));
-
-		struct netinfo *it = netinfo_get_first(netinfo_head);
-		while (it != NULL){
-			namelist_add(buf, &it->dns);
-			it= it->next;
-		}
-	}
-
-
-
-	for ( i = 0; i < MAXDNSRCH; i++)
-	{
-		if (!resState->dnsrch[i])
-			continue;
-		struct netinfo *it = netinfo_get_first(netinfo_head);
-		while(it) {
-			namelist_add(resState->dnsrch[i], &it->search);
-			it = it->next;
-		}
-	}
-}
-
 
 void read_dhcp(struct netinfo **netinfo_head)
 {
