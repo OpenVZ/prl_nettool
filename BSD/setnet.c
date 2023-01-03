@@ -25,6 +25,7 @@
  */
 
 #include "rcprl.h"
+#include "resolvconf.h"
 #include "exec.h"
 #include "../netinfo.h"
 #include "../namelist.h"
@@ -68,28 +69,29 @@ int set_ip(struct netinfo *if_it, struct nettool_mac *params)
 
 int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 {
-	const char cmd_tmpl[] = "resolvconf -a %s";
-	char cmd[sizeof(cmd_tmpl) + INET6_ADDRSTRLEN];
-	FILE *f;
+	struct resolvconf_line head;
 	int res;
+
+	VARUNUSED(if_it);
 
 	if (params->value == NULL)
 		return 0;
 
-	if (snprintf(cmd, sizeof(cmd), cmd_tmpl, if_it->name) >= sizeof(cmd))
-		return -EINVAL;
-
-	f = popen(cmd, "w");
-	if (f == NULL) {
-		werror("ERROR: Can't execute resolvconf");
-		return -errno;
+	res = resolvconf_load(&head);
+	if (res != 0) {
+		werror("ERROR: Can't load /etc/resolv.conf (%d)", res);
+		return res;
 	}
 
-	fprintf(f, "nameserver %s", params->value);
+	res = resolvconf_set_namserver(&head, params->value);
+	if (res != 0) {
+		werror("ERROR: Can't set nameserver (%d)", res);
+		return res;
+	}
 
-	res = pclose(f);
+	res = resolvconf_save(&head);
 	if (res != 0)
-		werror("ERROR: Resolvconf returned %d", res);
+		werror("ERROR: Can't save /etc/resolv.conf (%d)", res);
 
 	return res;
 }
