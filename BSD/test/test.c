@@ -1,6 +1,7 @@
 #include "../rcconf.h"
 #include "../rcconf_list.h"
 #include "../rcconf_sublist.h"
+#include "../resolvconf.h"
 #include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
@@ -16,6 +17,8 @@ CHEAT_DECLARE(
 	#define RCCONF_OUT_PATH TMP_PATH "/test_rc_out.conf"
 	#define INCORRECT_PATH  TMP_PATH "/test_rc_incorrect.conf"
 	#define RCCONF_HEADER   "*** HEADER ***"
+	#undef RESOLVCONF_PATH
+	#define RESOLVCONF_PATH TMP_PATH "/resolv.conf"
 )
 
 CHEAT_TEST(rcconf,
@@ -133,7 +136,8 @@ CHEAT_TEST(rcconf,
 	rcconf_save_items(RCCONF_OUT_PATH, RCCONF_HEADER, "new", NULL, "new2", "newval2", NULL);
 
 	f = fopen(RCCONF_OUT_PATH, "r");
-	fread(buf, sizeof(buf), 1, f);
+	res = fread(buf, 1, sizeof(buf), f);
+	buf[res] = '\0';
 	fclose(f);
 
 	cheat_assert_int(strcmp(buf, out), 0);
@@ -259,4 +263,134 @@ CHEAT_TEST(rcconf_sublist,
 	cheat_assert_string(rcconf_item->val, "val2");
 
 	rcconf_sublist_free(&sublist);
+)
+
+CHEAT_TEST(resolvconf,
+	#define OUT "nameserver 1.1.1.1\nnameserver    2.2.2.2\n   nameserver 3.3.3.3\n# comment\nsearch test.com test.org\nnameserver 4.4.4.4\n"
+	#define OUT2 "nameserver 1.1.1.1\nsearch abc.def\n"
+
+
+	struct resolvconf_line head;
+	const char *dns, *search;
+	char buf[512];
+	FILE *f;
+	int i, res;
+
+	mkdir(TMP_PATH, 0777);
+
+	f = fopen(RESOLVCONF_PATH, "w");
+	fprintf(f, "nameserver 1.1.1.1\n");
+	fprintf(f, "nameserver    2.2.2.2\n");
+	fprintf(f, "   nameserver 3.3.3.3\n");
+	fprintf(f, "# comment\n");
+	fprintf(f, "search a.b.c d.e.f\n");
+	fclose(f);
+
+	resolvconf_init(NULL);
+
+	res = resolvconf_load__(&head, "unknown/path");
+	cheat_assert_int(res, -ENOENT);
+	res = resolvconf_load__(NULL, RESOLVCONF_PATH);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_load__(&head, NULL);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_load__(&head, RESOLVCONF_PATH);
+	cheat_assert_int(res, 0);
+
+	i = 1;
+	resolvconf_dns_foreach(&head, dns) {
+		sprintf(buf, "%d.%d.%d.%d", i, i, i, i);
+		cheat_assert_string(dns, buf);
+		i++;
+	}
+	cheat_assert_int(i, 4);
+
+	res = resolvconf_set_namserver(NULL, "4.4.4.4");
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_set_namserver(&head, NULL);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_set_namserver(&head, "01234567890123456789012345678901234567890123456789");
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_set_namserver(&head, "3.3.3.3");
+	cheat_assert_int(res, 0);
+	res = resolvconf_set_namserver(&head, "4.4.4.4");
+	cheat_assert_int(res, 0);
+
+	search = resolvconf_get_search_list(NULL);
+	cheat_assert_pointer(search, NULL);
+	search = resolvconf_get_search_list(&head);
+	cheat_assert_string(search, "a.b.c d.e.f");
+
+	res = resolvconf_set_search_list(NULL, "test.com test.org");
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_set_search_list(&head, NULL);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_set_search_list(&head, "test.com test.org");
+	cheat_assert_int(res, 0);
+
+	i = 1;
+	resolvconf_dns_foreach(&head, dns) {
+		sprintf(buf, "%d.%d.%d.%d", i, i, i, i);
+		cheat_assert_string(dns, buf);
+		i++;
+	}
+	cheat_assert_int(i, 5);
+
+	res = resolvconf_save__(&head, "unknown/path");
+	cheat_assert_int(res, -ENOENT);
+	res = resolvconf_save__(NULL, RESOLVCONF_PATH);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_save__(&head, NULL);
+	cheat_assert_int(res, -EINVAL);
+	res = resolvconf_save__(&head, RESOLVCONF_PATH);
+	cheat_assert_int(res, 0);
+
+	resolvconf_free(NULL);
+	resolvconf_free(&head);
+
+	f = fopen(RESOLVCONF_PATH, "r");
+	res = fread(buf, 1, sizeof(buf), f);
+	buf[res] = '\0';
+	fclose(f);
+
+	cheat_assert_string(OUT, buf);
+
+	resolvconf_init(&head);
+
+	search = resolvconf_get_search_list(&head);
+	cheat_assert_pointer(search, NULL);
+
+	for (i = 0; i < 256; i++) {
+		sprintf(buf, "%d.%d.%d.%d", i, i, i, i);
+		res = resolvconf_set_namserver(&head, buf);
+		cheat_assert_int(res, 0);
+	}
+	res = resolvconf_set_namserver(&head, "1.2.3.4");
+	cheat_assert_int(res, -ERANGE);
+
+	resolvconf_free(&head);
+
+	resolvconf_init(&head);
+
+	sprintf(buf, "%256s", "*");
+	res = resolvconf_set_search_list(&head, buf);
+	cheat_assert_int(res, -EINVAL);
+
+	res = resolvconf_set_namserver(&head, "1.1.1.1");
+	cheat_assert_int(res, 0);
+
+	res = resolvconf_set_search_list(&head, "abc.def");
+	cheat_assert_int(res, 0);
+
+	res = resolvconf_save__(&head, RESOLVCONF_PATH);
+	cheat_assert_int(res, 0);
+
+	f = fopen(RESOLVCONF_PATH, "r");
+	res = fread(buf, 1, sizeof(buf), f);
+	buf[res] = '\0';
+	fclose(f);
+
+	cheat_assert_string(OUT2, buf);
+
+	resolvconf_free(&head);
 )

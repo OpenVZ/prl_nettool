@@ -10,7 +10,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 set(COVERAGE_DIR "coverage")
 set(TMP_DIR "tmp")
 
-file(GLOB SOURCES "../rcconf.c" "../rcconf_list.c" "../rcconf_sublist.c" "test.c")
+file(GLOB SOURCES "../rcconf.c" "../rcconf_list.c" "../rcconf_sublist.c" "../resolvconf.c" "test.c")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
