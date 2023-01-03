@@ -98,8 +98,29 @@ int set_dns(struct netinfo *if_it, struct nettool_mac *params)
 
 int set_search_domain(struct nettool_mac *params)
 {
-	VARUNUSED(params);
-	return -ENOENT;
+	struct resolvconf_line head;
+	int res;
+
+	if (params->value == NULL)
+		return 0;
+
+	res = resolvconf_load(&head);
+	if (res != 0) {
+		werror("ERROR: Can't load /etc/resolv.conf (%d)", res);
+		return res;
+	}
+
+	res = resolvconf_set_search_list(&head, params->value);
+	if (res != 0) {
+		werror("ERROR: Can't set search list (%d)", res);
+		return res;
+	}
+
+	res = resolvconf_save(&head);
+	if (res != 0)
+		werror("ERROR: Can't save /etc/resolv.conf (%d)", res);
+
+	return res;
 }
 
 int set_hostname(struct nettool_mac *params)
