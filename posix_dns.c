@@ -60,12 +60,14 @@ void read_dns(struct netinfo **netinfo_head)
 	}
 
 	for (i = 0; i< MAXNS; i++) {
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 		saddr = &resState->_u._ext.ext->nsaddrs[i].sin6;
 		if (memcmp(&(saddr->sin6_addr), &in6addr_any, sizeof(in6addr_any)) == 0)
 			continue;
-#else
+#elif defined(__linux__)
 		saddr = resState->_u._ext.nsaddrs[i];
+#else
+#error Unsupported platform
 #endif
 		if (saddr == NULL)
 			continue;
