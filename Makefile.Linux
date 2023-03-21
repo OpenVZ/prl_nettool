@@ -3,7 +3,7 @@ VERSION=$(shell cat Makefile.version)
 CC = gcc
 CFLAGS = $(RPM_OPT_FLAGS) -static -g -Wall -O2 -D_LIN_ -DVERSION=\"$(VERSION)\"
 DESTDIR=
-LDFLAGS = -lnetlink
+LDFLAGS = -lnetlink -lmnl
 SBINDIR=$(DESTDIR)/usr/sbin
 SCRIPTSDIR=$(DESTDIR)/usr/lib/vz-tools/tools/scripts
 CLOUDINITDIR=$(DESTDIR)/etc/cloud/cloud.cfg.d
