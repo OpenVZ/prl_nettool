@@ -43,29 +43,25 @@
 #include "../posix_dns.h"
 #include "../netinfo.h"
 #include "../namelist.h"
-#include <libnetlink.h>
 #include "../common.h"
 #include "detection.h"
 #include "exec.h"
+
+#include <asm/types.h>
+#include <libnetlink.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
 
 struct namelist *bridge_names = NULL;
 
 int os_vendor;
 char *os_script_prefix = NULL;
 
-struct nlmsg_list
-{
-	struct nlmsg_list *next;
-	struct nlmsghdr h;
-};
-
-static int store_nlmsg(const struct sockaddr_nl *who, struct nlmsghdr *n, void *arg)
+static int store_nlmsg(struct nlmsghdr *n, void *arg)
 {
 	struct nlmsg_list **linfo = (struct nlmsg_list**)arg;
 	struct nlmsg_list *h;
 	struct nlmsg_list **lp;
-
-	VARUNUSED(who);
 
 	h = malloc(n->nlmsg_len+sizeof(void*));
 	if (h == NULL) {
@@ -322,8 +318,6 @@ static struct netinfo *put_linkinfo(struct nlmsghdr *n,
 	return if_info;
 }
 
-
-
 static int read_ifconfioctl(struct netinfo **netinfo_head)
 {
 	struct rtnl_handle rth;
@@ -338,7 +332,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 	if (rtnl_open(&rth, 0) < 0)
 		return 1;
 
-	ret = rtnl_wilddump_request(&rth, AF_UNSPEC, RTM_GETLINK);
+	ret = rtnl_linkdump_req(&rth, AF_UNSPEC);
 	if (ret < 0) {
 		werror("Cannot send dump request");
 		goto out;
@@ -351,7 +345,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 	}
 
 	//get IPv4
-	ret = rtnl_wilddump_request(&rth, AF_INET, RTM_GETADDR);
+	ret = rtnl_addrdump_req(&rth, AF_INET, NULL);
 	if (ret < 0) {
 		werror("Cannot send dump request");
 		goto out2;
@@ -363,7 +357,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 		goto out2;
 	}
 
-	ret = rtnl_wilddump_request(&rth, AF_INET, RTM_GETROUTE);
+	ret = rtnl_routedump_req(&rth, AF_INET, NULL);
 	if (ret < 0) {
 		werror("Cannot send dump request");
 		goto out2;
@@ -376,7 +370,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 	}
 
 	//get IPv6
-	ret = rtnl_wilddump_request(&rth, AF_INET6, RTM_GETADDR);
+	ret = rtnl_addrdump_req(&rth, AF_INET6, NULL);
 	if (ret < 0) {
 		werror("Cannot send dump request");
 		goto out2;
@@ -389,7 +383,7 @@ static int read_ifconfioctl(struct netinfo **netinfo_head)
 	}
 
 	//get IPv6 route
-	ret = rtnl_wilddump_request(&rth, AF_INET6, RTM_GETROUTE);
+	ret = rtnl_routedump_req(&rth, AF_INET6, NULL);
 	if (ret < 0) {
 		werror("Cannot send dump request");
 		goto out2;
