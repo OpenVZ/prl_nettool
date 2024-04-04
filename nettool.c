@@ -158,10 +158,19 @@ int is_equal_dhcp(struct netinfo *if_it, struct nettool_mac *mac_it)
 #endif
 
 	if (!net_opts.compare)
+	{
+		if_it->dhcp4_changed = 1;
+		if_it->dhcp6_changed = 1;
 		return 0;
+	}
 
-	return (dhcpv4 == if_it->configured_with_dhcp &&
-		dhcpv6 == if_it->configured_with_dhcpv6);
+	if_it->dhcp4_changed = dhcpv4 != if_it->configured_with_dhcp;
+	if_it->dhcp6_changed = dhcpv6 != if_it->configured_with_dhcpv6;
+
+	debug("DHCP;dhcp4_changed = %d; dhcp6_changed = %d" ,
+	       if_it->dhcp4_changed, if_it->dhcp6_changed);
+
+	return !if_it->dhcp4_changed && !if_it->dhcp6_changed;
 }
 
 static int is_equal_ip_skip_local(struct netinfo *if_it, const char *str, const char *delim)
@@ -511,8 +520,10 @@ int apply_parameters()
 		 * settings on longhorn windows and newer. see
 		 * #PSBM-18905.
 		 * */
-		if (NULL != get_opt_mac(if_it->mac, NET_OPT_DHCP))
-			do_disable_adapter(if_it);
+
+		if ((if_it->dhcp4_changed || if_it->dhcp6_changed) &&
+		    (NULL != get_opt_mac(if_it->mac, NET_OPT_DHCP)))
+				do_disable_adapter(if_it);
 #endif // NTDDI_VERSION >= NTDDI_LONGHORN
 		enable_adapter_if_needed(if_it);
 	}

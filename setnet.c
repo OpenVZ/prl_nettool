@@ -671,7 +671,14 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 			if_it->configured_with_dhcp = 1;
 		}
 		else
+		{
 			error(0, "DHCP v4 is already enabled");
+			if_it->dhcp4_changed = 0;
+		}
+	}
+	else
+	{
+		if_it->dhcp4_changed = 0;
 	}
 
 	mac_it = get_opt_mac(if_it->mac, NET_OPT_IP);
@@ -694,7 +701,14 @@ int set_dhcp(struct netinfo *if_it, struct nettool_mac *params)
 			if_it->configured_with_dhcpv6 = 1;
 		}
 		else
+		{
+			if_it->dhcp6_changed = 0;
 			error(0, "DHCP v6 is already enabled");
+		}
+	}
+	else
+	{
+		if_it->dhcp6_changed = 0;
 	}
 
 	return 0;

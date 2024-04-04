@@ -50,6 +50,8 @@ struct netinfo
 	int configured_with_dhcpv6;
 	int disabled;
 	int changed;
+	int dhcp4_changed;
+	int dhcp6_changed;
 	struct netinfo *next;
 
 };
